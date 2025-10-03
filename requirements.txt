@@ -6,9 +6,8 @@ certifi==2025.8.3
 charset-normalizer==3.4.3
 click==8.2.1
 deprecation==2.1.0
-email-validator==2.1.0
 Flask==3.1.2
-Flask-JWT-Extended==4.6.0
+Flask-JWT-Extended==4.7.1
 Flask-SQLAlchemy==3.1.1
 greenlet==3.2.4
 h11==0.16.0
@@ -21,7 +20,6 @@ idna==3.10
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
-marshmallow==3.20.1
 packaging==25.0
 postgrest==1.1.1
 psycopg2-binary==2.9.10
