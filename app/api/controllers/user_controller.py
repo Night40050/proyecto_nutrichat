@@ -13,20 +13,6 @@ logger = logging.getLogger(__name__)
 class UserController:
     @staticmethod
     def register():
-        """
-        Registrar nuevo usuario (solo requiere telegram_id)
-        Body JSON:
-        {
-            "telegram_id": 123456789,
-            "nombre": "Juan Pérez" (opcional),
-            "email": "email@ejemplo.com" (opcional),
-            "telefono": "+52123456789" (opcional),
-            "sexo": "M" (opcional),
-            "fecha_nacimiento": "1990-01-15" (opcional),
-            "peso_kg": 70.5 (opcional),
-            "altura_cm": 175.0 (opcional)
-        }
-        """
         try:
             data = request.get_json()
             
@@ -69,7 +55,7 @@ class UserController:
                     'message': 'El email ya está registrado'
                 }), 409
             
-            #  Crear usuario con telegram_id como identificador principal
+            #  Crear usuario con telegram_id 
             user = User.create_user(
                 telegram_id=telegram_id,
                 nombre=data.get('nombre'),

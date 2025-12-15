@@ -1,6 +1,5 @@
 """
-Modelo de Usuario simplificado para NutriChat
-Compatible con SQLite (testing) y PostgreSQL (producción)
+Modelo de Usuario para NutriChat
 """
 
 import uuid
@@ -9,7 +8,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional, Dict, Any
 
-from sqlalchemy import Column, String, Boolean, DateTime, Numeric, Text, Integer, Date, BigInteger
+from sqlalchemy import Column, String, Boolean, DateTime, Numeric, Text, Integer, Date, BigInteger, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import validates
 from email_validator import validate_email, EmailNotValidError
@@ -17,9 +16,95 @@ from email_validator import validate_email, EmailNotValidError
 from .database import db
 
 
+# ==================== ROL ====================
+
+class Rol(db.Model):
+    """
+    Modelo de Rol para PostgreSQL (Supabase)
+    Representa un rol de usuario en el sistema
+    """
+
+    __tablename__ = 'roles'
+
+    # Campos principales
+    rol_id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(Text, nullable=False, unique=True)
+    descripcion = Column(Text, nullable=True)
+
+    # ==================== MÉTODOS DE CREACIÓN ====================
+
+    @classmethod
+    def create_rol(cls, nombre: str, descripcion: str = None) -> 'Rol':
+        """
+        Crear un nuevo rol
+
+        Args:
+            nombre: Nombre del rol (requerido, único)
+            descripcion: Descripción del rol
+
+        Returns:
+            Rol: Instancia del rol creado
+
+        Raises:
+            ValueError: Si nombre no es válido
+        """
+        if not nombre or not nombre.strip():
+            raise ValueError("nombre es requerido")
+
+        rol = cls(
+            nombre=nombre.strip(),
+            descripcion=descripcion.strip() if descripcion else None
+        )
+
+        return rol
+
+    # ==================== PROPIEDADES DE CONVENIENCIA ====================
+
+    @property
+    def id(self) -> int:
+        """Obtener ID del rol"""
+        return self.rol_id
+
+    # ==================== SERIALIZACIÓN ====================
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convertir rol a diccionario"""
+        return {
+            'id': self.rol_id,
+            'nombre': self.nombre,
+            'descripcion': self.descripcion,
+        }
+
+    def to_json_safe(self) -> Dict[str, Any]:
+        """Convertir a JSON seguro"""
+        return self.to_dict()
+
+    # ==================== MÉTODOS DE CONSULTA ====================
+
+    @classmethod
+    def get_by_nombre(cls, nombre: str) -> Optional['Rol']:
+        """Buscar rol por nombre"""
+        if not nombre:
+            return None
+        return cls.query.filter_by(nombre=nombre).first()
+
+    @classmethod
+    def get_by_id(cls, rol_id: int) -> Optional['Rol']:
+        """Buscar rol por ID"""
+        return cls.query.filter_by(rol_id=rol_id).first()
+
+    # ==================== REPRESENTACIÓN ====================
+
+    def __repr__(self) -> str:
+        return f"<Rol rol_id={self.rol_id} - {self.nombre}>"
+
+    def __str__(self) -> str:
+        return self.nombre
+
+
 class User(db.Model):
     """
-    Modelo de Usuario simplificado que funciona en SQLite y PostgreSQL
+    Modelo de Usuario simplificado para PostgreSQL (Supabase)
     Autenticación únicamente por Telegram ID (sin contraseñas)
     """
 
@@ -30,9 +115,9 @@ class User(db.Model):
 
     # Información básica
     nombre = Column(String, nullable=True)
-    email = Column(String, nullable=True, unique=True)  # Opcional ahora
+    email = Column(String, nullable=True, unique=True)
     telefono = Column(String, nullable=True)
-    rol_id = Column(Integer, nullable=False, default=2)
+    rol_id = Column(Integer, ForeignKey('roles.rol_id'), nullable=False, default=2)
 
     # Fechas y estado
     fecha_registro = Column(DateTime, default=datetime.utcnow)
@@ -45,11 +130,11 @@ class User(db.Model):
     peso_kg = Column(Numeric(5, 2), nullable=True)
     altura_cm = Column(Numeric(5, 2), nullable=True)
 
-    # Perfil como texto JSON (compatible con SQLite y PostgreSQL)
+    # Perfil como texto JSON
     perfil_json = Column(Text, nullable=True)
 
-    # Integración con Telegram (CAMPO PRINCIPAL PARA AUTENTICACIÓN)
-    telegram_id = Column(BigInteger, nullable=False, unique=True)  # Ahora es obligatorio
+    # Integración con Telegram (campo principal para autenticación)
+    telegram_id = Column(BigInteger, nullable=False, unique=True)
 
     def __init__(self, **kwargs):
         if 'perfil_json' not in kwargs:
@@ -104,7 +189,7 @@ class User(db.Model):
         if not isinstance(telegram_id, int):
             raise ValueError("telegram_id debe ser un número entero")
         
-        # Generar email temporal si no se proporciona
+        # Asegurar que email sea None si no se proporciona
         if 'email' not in kwargs or not kwargs['email']:
             kwargs['email'] = None
         
