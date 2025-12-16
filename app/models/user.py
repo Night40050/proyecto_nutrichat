@@ -1,5 +1,6 @@
 """
 Modelo de Usuario para NutriChat
+contiene las talas roles y usuarios
 """
 
 import uuid

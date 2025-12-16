@@ -11,6 +11,10 @@ from .productos import Categoria, Producto, ProductoNutricion, ProductoSnapshot
 from .reportes import Reporte, FeedbackRecomendacion
 from .listas import ListaMercado, ProductosEnLista
 from .condiciones import CondicionNutricional, UsuarioCondicion
+from .telegram_sesion import TelegramSesion
+from .audit_log import AuditLog
+from .configuracion_sistema import ConfiguracionSistema
+from .scraping_cache import ScrapingCache
 
 # Exportar todos los modelos principales
 __all__ = [
@@ -27,4 +31,8 @@ __all__ = [
     'ProductosEnLista',
     'CondicionNutricional',
     'UsuarioCondicion',
+    'TelegramSesion',
+    'AuditLog',
+    'ConfiguracionSistema',
+    'ScrapingCache',
 ]
