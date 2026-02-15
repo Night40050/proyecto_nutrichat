@@ -7,8 +7,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
-from sqlalchemy import Column, Text, BigInteger, DateTime, ForeignKey, func, Index
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, Text, BigInteger, DateTime, ForeignKey, func, Index, JSON
+from app.db_types import GUID, JSON
 
 from .database import db
 
@@ -23,17 +23,17 @@ class TelegramSesion(db.Model):
     __tablename__ = 'telegram_sesiones'
 
     # Campos principales
-    sesion_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sesion_id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # Relación con usuario (opcional)
     telegram_id = Column(BigInteger, nullable=False)
-    usuario_id = Column(UUID(as_uuid=True), ForeignKey('usuarios.usuario_id'), nullable=True)
+    usuario_id = Column(GUID(), ForeignKey('usuarios.usuario_id'), nullable=True)
 
     # Estado de conversación
     estado_conversacion = Column(Text, nullable=True)
 
     # Contexto temporal del flujo conversacional
-    contexto = Column(JSONB, nullable=True)
+    contexto = Column(JSON, nullable=True)
 
     # Timestamps
     creado_en = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

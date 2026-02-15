@@ -6,8 +6,8 @@ Registra eventos críticos del sistema para auditoría y trazabilidad
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
-from sqlalchemy import Column, Text, BigInteger, DateTime, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, Text, BigInteger, DateTime, func, JSON
+from app.db_types import GUID, JSON
 
 from .database import db
 
@@ -32,10 +32,10 @@ class AuditLog(db.Model):
     accion = Column(Text, nullable=False)
 
     # Usuario que realizó la acción (opcional)
-    usuario_id = Column(UUID(as_uuid=True), nullable=True)
+    usuario_id = Column(GUID(), nullable=True)
 
     # Payload con datos relevantes del evento
-    payload = Column(JSONB, nullable=True)
+    payload = Column(JSON, nullable=True)
 
     # Timestamp
     creado_en = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

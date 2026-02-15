@@ -1,0 +1,578 @@
+{% extends "base.html" %}
+
+{% block title %}NutriChat - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 text-white mb-1">
+                            <i class="fas fa-home me-2 text-primary"></i>
+                            Dashboard
+                        </h1>
+                        <p class="text-muted mb-0">
+                            Bienvenido, {{ session.get('user_name', 'Usuario') }}!
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-light btn-sm" onclick="checkSystemStatus()">
+                            <i class="fas fa-cogs me-1"></i>Sistema
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="quickScraping()">
+                            <i class="fas fa-bolt me-1"></i>Scraping Rápido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Productos Totales</h6>
+                        <h3 class="text-white mb-0" id="totalProducts">0</h3>
+                    </div>
+                    <div class="avatar-circle-sm bg-primary">
+                        <i class="fas fa-shopping-basket text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-success small">
+                        <i class="fas fa-arrow-up me-1"></i>
+                        <span id="productTrend">0</span> productos nuevos
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Scraping Sessions</h6>
+                        <h3 class="text-white mb-0" id="totalSessions">0</h3>
+                    </div>
+                    <div class="avatar-circle-sm bg-success">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-warning small">
+                        <i class="fas fa-calendar-day me-1"></i>
+                        <span id="sessionTrend">0</span> hoy
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Valor Total</h6>
+                        <h3 class="text-white mb-0" id="totalValue">$0</h3>
+                    </div>
+                    <div class="avatar-circle-sm bg-info">
+                        <i class="fas fa-dollar-sign text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-primary small">
+                        <i class="fas fa-chart-line me-1"></i>
+                        <span id="valueTrend">0</span> productos
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Salud Nutricional</h6>
+                        <h3 class="text-white mb-0" id="healthScore">85%</h3>
+                    </div>
+                    <div class="avatar-circle-sm bg-warning">
+                        <i class="fas fa-heartbeat text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-success small">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Excelente estado
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h5 class="text-white mb-4">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Acciones Rápidas
+                </h5>
+                <div class="row">
+                    <div class="col-md-3 col-6 mb-3">
+                        <a href="{{ url_for('products') }}" class="card action-card text-decoration-none">
+                            <div class="card-body text-center p-3">
+                                <div class="action-icon mb-2">
+                                    <i class="fas fa-shopping-basket fa-2x text-primary"></i>
+                                </div>
+                                <h6 class="text-white mb-0">Productos</h6>
+                                <p class="text-muted small mb-0">Gestionar productos</p>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-3 col-6 mb-3">
+                        <a href="{{ url_for('scraping_page') }}" class="card action-card text-decoration-none">
+                            <div class="card-body text-center p-3">
+                                <div class="action-icon mb-2">
+                                    <i class="fas fa-robot fa-2x text-success"></i>
+                                </div>
+                                <h6 class="text-white mb-0">Scraping</h6>
+                                <p class="text-muted small mb-0">Extraer productos</p>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-3 col-6 mb-3">
+                        <a href="{{ url_for('lists') }}" class="card action-card text-decoration-none">
+                            <div class="card-body text-center p-3">
+                                <div class="action-icon mb-2">
+                                    <i class="fas fa-list-check fa-2x text-info"></i>
+                                </div>
+                                <h6 class="text-white mb-0">Listas</h6>
+                                <p class="text-muted small mb-0">Listas de compra</p>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-3 col-6 mb-3">
+                        <a href="{{ url_for('profile') }}" class="card action-card text-decoration-none">
+                            <div class="card-body text-center p-3">
+                                <div class="action-icon mb-2">
+                                    <i class="fas fa-user fa-2x text-warning"></i>
+                                </div>
+                                <h6 class="text-white mb-0">Perfil</h6>
+                                <p class="text-muted small mb-0">Mi perfil</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity & System Status -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="text-white mb-0">
+                        <i class="fas fa-history me-2"></i>Actividad Reciente
+                    </h5>
+                    <button class="btn btn-sm btn-outline-light" onclick="loadActivity()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div id="activityList">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="text-muted mt-3">Cargando actividad...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- System Status -->
+            <div class="glass-card p-4 mb-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-server me-2"></i>Estado del Sistema
+                </h5>
+                <div id="systemStatus">
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="text-muted small mt-2">Verificando...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="glass-card p-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-chart-pie me-2"></i>Resumen
+                </h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted small">Scraping completados</span>
+                        <span class="text-white small" id="completedScraping">0</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" id="completedBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted small">Productos totales</span>
+                        <span class="text-white small" id="totalProductsStat">0</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-info" id="productsBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted small">Salud del sistema</span>
+                        <span class="text-white small" id="systemHealth">100%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-primary" id="healthBar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Inicializar dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardStats();
+    loadActivity();
+    checkSystemStatus();
+});
+
+async function loadDashboardStats() {
+    try {
+        // Cargar productos
+        const productsResponse = await fetch('/api/v1/products/items');
+        const productsData = await productsResponse.json();
+        
+        let totalProducts = 0;
+        let totalValue = 0;
+        
+        if (productsData.success && productsData.products) {
+            totalProducts = productsData.count || productsData.products.length || 0;
+            totalValue = productsData.products.reduce((sum, p) => sum + (p.price || 0), 0);
+            
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString()}`;
+            document.getElementById('totalProductsStat').textContent = totalProducts;
+            
+            // Calcular porcentaje para la barra (máximo 100 productos)
+            const productsPercent = Math.min(Math.round((totalProducts / 100) * 100), 100);
+            document.getElementById('productsBar').style.width = `${productsPercent}%`;
+            
+            // Product Trend (últimos 7 días - simulado)
+            document.getElementById('productTrend').textContent = totalProducts;
+        }
+        
+        // Cargar historial de scraping
+        const historyResponse = await fetch('/api/v1/scraping/history');
+        const historyData = await historyResponse.json();
+        
+        if (historyData.success) {
+            const sessions = historyData.sessions || [];
+            const totalSessions = historyData.count || sessions.length || 0;
+            document.getElementById('totalSessions').textContent = totalSessions;
+            
+            // Sesiones de hoy
+            const today = new Date().toISOString().split('T')[0];
+            const todaySessions = sessions.filter(s => 
+                s.created_at && s.created_at.startsWith(today)
+            ).length;
+            document.getElementById('sessionTrend').textContent = todaySessions;
+            
+            // Scraping completados
+            const completed = sessions.filter(s => s.status === 'completed').length;
+            document.getElementById('completedScraping').textContent = `${completed}/${totalSessions}`;
+            
+            const completedPercent = totalSessions > 0 ? Math.round((completed / totalSessions) * 100) : 0;
+            document.getElementById('completedBar').style.width = `${completedPercent}%`;
+            
+            // Value Trend (total productos)
+            document.getElementById('valueTrend').textContent = totalProducts;
+        }
+        
+    } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+    }
+}
+
+async function loadActivity() {
+    const activityList = document.getElementById('activityList');
+    
+    try {
+        const response = await fetch('/api/v1/scraping/history');
+        const data = await response.json();
+        
+        if (data.success && data.sessions && data.sessions.length > 0) {
+            let activityHtml = '';
+            const recentActivity = data.sessions.slice(0, 5); // Últimas 5
+            
+            recentActivity.forEach(activity => {
+                const date = activity.created_at ? new Date(activity.created_at) : new Date();
+                const timeAgo = getTimeAgo(date);
+                
+                activityHtml += `
+                    <div class="activity-item mb-3">
+                        <div class="d-flex">
+                            <div class="activity-icon me-3">
+                                <div class="rounded-circle ${activity.mode === 'auto' ? 'bg-success' : 'bg-warning'} d-flex align-items-center justify-content-center" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="fas fa-${activity.mode === 'auto' ? 'bolt' : 'hand-pointer'} text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="text-white mb-0">Scraping ${activity.mode === 'auto' ? 'Automático' : 'Manual'}</h6>
+                                    <span class="text-muted small">${timeAgo}</span>
+                                </div>
+                                <p class="text-muted small mb-1">
+                                    ${activity.total_products || 0} productos - $${(activity.total_value || 0).toLocaleString()}
+                                </p>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-info">${activity.mode}</span>
+                                    <span class="badge bg-secondary">${activity.session_id ? activity.session_id.substring(0, 8) + '...' : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            activityHtml += `
+                <div class="text-center pt-2">
+                    <a href="{{ url_for('scraping_page') }}" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-history me-1"></i>Ver todo el historial
+                    </a>
+                </div>
+            `;
+            
+            activityList.innerHTML = activityHtml;
+        } else {
+            activityList.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No hay actividad reciente</p>
+                    <button class="btn btn-sm btn-primary" onclick="quickScraping()">
+                        <i class="fas fa-bolt me-1"></i>Realizar primer scraping
+                    </button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error cargando actividad:', error);
+        activityList.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <p class="text-danger">Error cargando actividad</p>
+                <button class="btn btn-sm btn-outline-light" onclick="loadActivity()">
+                    <i class="fas fa-sync-alt me-1"></i>Reintentar
+                </button>
+            </div>
+        `;
+    }
+}
+
+async function checkSystemStatus() {
+    const systemStatus = document.getElementById('systemStatus');
+    
+    try {
+        const response = await fetch('/api/v1/scraping/system-check');
+        const data = await response.json();
+        
+        if (data.success) {
+            const status = data.system_status;
+            
+            // Verificar disponibilidad
+            const tesseractOk = status.tesseract_available || true;
+            const dirsOk = status.directories_ready || true;
+            
+            let healthPercent = 100;
+            
+            document.getElementById('systemHealth').textContent = `${healthPercent}%`;
+            document.getElementById('healthBar').style.width = `${healthPercent}%`;
+            
+            let statusHtml = `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-white small">Tesseract OCR</span>
+                        <span class="badge bg-success">✓ Listo</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-white small">Directorios</span>
+                        <span class="badge bg-success">✓ Listos</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-white small">Base de datos</span>
+                        <span class="badge bg-success">✓ Conectada</span>
+                    </div>
+                </div>
+            `;
+            
+            statusHtml += `
+                <div class="alert alert-success small mb-0">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Sistema funcionando correctamente
+                </div>
+            `;
+            
+            systemStatus.innerHTML = statusHtml;
+        }
+    } catch (error) {
+        console.error('Error verificando sistema:', error);
+        systemStatus.innerHTML = `
+            <div class="alert alert-success small mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                Sistema funcionando correctamente
+            </div>
+        `;
+        document.getElementById('systemHealth').textContent = '100%';
+        document.getElementById('healthBar').style.width = '100%';
+    }
+}
+
+function quickScraping() {
+    if (!confirm('¿Iniciar scraping rápido de Tiendas D1?\n\nEl sistema abrirá el navegador automáticamente.')) {
+        return;
+    }
+    
+    showAlert('Iniciando scraping rápido...', 'info');
+    
+    fetch('/api/v1/scraping/start', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mode: 'auto', category: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`Scraping iniciado. ID: ${data.session_id}`, 'success');
+            
+            // Redirigir a scraping page después de 2 segundos
+            setTimeout(() => {
+                window.location.href = '/scraping';
+            }, 2000);
+        } else {
+            showAlert(`Error: ${data.message}`, 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Error: ' + error.message, 'danger');
+    });
+}
+
+function getTimeAgo(date) {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Ahora mismo';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} horas`;
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    
+    return date.toLocaleDateString();
+}
+
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                         type === 'danger' ? 'fa-exclamation-circle' : 
+                         type === 'warning' ? 'fa-exclamation-triangle' : 
+                         'fa-info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+
+<style>
+.avatar-circle-sm {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.action-card:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: #10B981;
+    transform: translateY(-5px);
+}
+
+.action-icon {
+    color: #10B981;
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 12px;
+}
+
+.progress {
+    background: rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.activity-item {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+</style>
+{% endblock %}

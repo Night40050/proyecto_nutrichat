@@ -1,38 +1,27 @@
 """
 Modelos de datos para NutriChat
-
-Este módulo expone todos los modelos de la aplicación para facilitar
-las importaciones desde otras partes del código.
 """
 
 from .database import db
-from .user import User, Rol
-from .productos import Categoria, Producto, ProductoNutricion, ProductoSnapshot
-from .reportes import Reporte, FeedbackRecomendacion
-from .listas import ListaMercado, ProductosEnLista
-from .condiciones import CondicionNutricional, UsuarioCondicion
-from .telegram_sesion import TelegramSesion
-from .audit_log import AuditLog
-from .configuracion_sistema import ConfiguracionSistema
-from .scraping_cache import ScrapingCache
 
-# Exportar todos los modelos principales
-__all__ = [
-    'db',
-    'User',
-    'Rol',
-    'Categoria',
-    'Producto',
-    'ProductoNutricion',
-    'ProductoSnapshot',
-    'Reporte',
-    'FeedbackRecomendacion',
-    'ListaMercado',
-    'ProductosEnLista',
-    'CondicionNutricional',
-    'UsuarioCondicion',
-    'TelegramSesion',
-    'AuditLog',
-    'ConfiguracionSistema',
-    'ScrapingCache',
-]
+# NO importar nada más aquí - solo db
+# Esto evita importaciones circulares
+
+# Función para obtener modelos cuando se necesiten
+def get_user_model():
+    """Obtener modelo User (importación diferida)"""
+    from .user import User, Rol
+    return User, Rol
+
+def get_producto_model():
+    """Obtener modelo Producto (importación diferida)"""
+    from .productos import Categoria, Producto, ProductoNutricion, ProductoSnapshot
+    return Categoria, Producto, ProductoNutricion, ProductoSnapshot
+
+def get_user_products_model():
+    """Obtener modelos de user_products (importación diferida)"""
+    from .user_products import UserProduct, ScrapingSession
+    return UserProduct, ScrapingSession
+
+# Exportar solo db inicialmente
+__all__ = ['db']

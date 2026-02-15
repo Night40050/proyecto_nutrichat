@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 from sqlalchemy import Column, Text, Integer, DateTime, func, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON
 
 from .database import db
 
@@ -37,7 +37,7 @@ class ScrapingCache(db.Model):
     html_content = Column(Text, nullable=True)
 
     # Headers de la respuesta
-    headers = Column(JSONB, nullable=True)
+    headers = Column(JSON, nullable=True)
 
     # Código de estado HTTP
     status_code = Column(Integer, nullable=True)

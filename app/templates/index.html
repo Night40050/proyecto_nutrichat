@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}NutriChat - Tu Asistente Nutricional Inteligente{% endblock %}
+
+{% block content %}
+
+<!-- Redirección automática para usuarios logueados -->
+{% if session.get('user_id') %}
+<script>
+    // Redirigir automáticamente al dashboard si ya está logueado
+    window.location.href = "{{ url_for('dashboard') }}";
+</script>
+
+<!-- Contenido temporal mientras redirige -->
+<div class="container mt-5 text-center">
+    <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3">Redirigiendo al Dashboard...</p>
+</div>
+
+{% else %}
+
+<!-- CONTENIDO PÚBLICO SOLO PARA USUARIOS NO LOGUEADOS -->
+<!-- Hero Section -->
+<section class="hero-section py-5" id="hero">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <h1 class="display-4 fw-bold mb-4">
+                    ¡INTELIGENCIA ARTIFICIAL!
+                    <span class="text-gradient" style="background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        Transforma tu Alimentación
+                    </span>
+                    con Nutrición Inteligente
+                </h1>
+                <p class="lead mb-4">
+                    NutriChat combina inteligencia artificial con ciencia nutricional para ayudarte a tomar decisiones alimenticias más saludables, gestionar productos inteligentemente y alcanzar tus objetivos de bienestar.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4">
+                        <i class="fas fa-rocket me-2"></i> Comenzar Gratis
+                    </a>
+                    <a href="#features" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-info-circle me-2"></i> Conoce Más
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="glass-card p-4 rounded-3 position-relative overflow-hidden">
+                    <div class="position-absolute top-0 start-0 w-100 h-100" 
+                         style="background: linear-gradient(45deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1)); z-index: -1;"></div>
+                    <div class="row text-center mb-4">
+                        <div class="col-4">
+                            <div class="display-6 fw-bold">5000+</div>
+                            <div class="text-muted">Usuarios Felices</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="display-6 fw-bold">98%</div>
+                            <div class="text-muted">Satisfacción</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="display-6 fw-bold">24/7</div>
+                            <div class="text-muted">Soporte Activo</div>
+                        </div>
+                    </div>
+                    <!-- Dashboard Preview -->
+                    <div class="dashboard-preview rounded-2 overflow-hidden position-relative">
+                        <div class="bg-dark p-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="badge bg-success me-2">NutriChat Dashboard</div>
+                                <div class="text-muted small ms-auto">Panel de control en tiempo real</div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="glass-card-inner p-3 rounded-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-shopping-basket text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="h4 mb-0">127</div>
+                                                <div class="text-success small">Productos +12%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="glass-card-inner p-3 rounded-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-success d-flex align-items-center justify-content-center me-3" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-heartbeat text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="h4 mb-0">92%</div>
+                                                <div class="text-success small">Salud Excelente</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- NutriBot Preview -->
+<section class="py-5 bg-dark" id="nutribot-preview">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-5 mb-4 mb-lg-0">
+                <div class="glass-card p-4 rounded-3">
+                    <h3 class="fw-bold mb-3">
+                        <i class="fas fa-robot text-primary me-2"></i>
+                        NutriBot AI
+                    </h3>
+                    <p class="text-muted mb-3">Asistente inteligente de nutrición</p>
+                    <div class="chat-preview bg-darker p-3 rounded-2 mb-3">
+                        <div class="message-bot d-flex mb-3">
+                            <div class="avatar-bot rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 32px; height: 32px;">
+                                <i class="fas fa-robot text-white small"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="message-content bg-primary bg-opacity-25 p-3 rounded-2">
+                                    <p class="mb-0">"Te recomiendo más vegetales verdes para hoy. Son ricos en antioxidantes y te ayudarán con tu energía."</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="message-user d-flex mb-3">
+                            <div class="flex-grow-1 text-end">
+                                <div class="message-content bg-success bg-opacity-25 p-3 rounded-2">
+                                    <p class="mb-0">"¿Qué frutas son mejores para mi dieta?"</p>
+                                </div>
+                            </div>
+                            <div class="avatar-user rounded-circle bg-success d-flex align-items-center justify-content-center ms-3" 
+                                 style="width: 32px; height: 32px;">
+                                <i class="fas fa-user text-white small"></i>
+                            </div>
+                        </div>
+                        <div class="message-bot d-flex">
+                            <div class="avatar-bot rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 32px; height: 32px;">
+                                <i class="fas fa-robot text-white small"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="message-content bg-primary bg-opacity-25 p-3 rounded-2">
+                                    <p class="mb-0">"Para tu metabolismo, recomiendo frutas cítricas y berries. ¿Quieres que te prepare un plan semanal?"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" class="form-control bg-darker border-secondary" placeholder="Escribe tu pregunta..." disabled>
+                        <button class="btn btn-primary" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <h2 class="fw-bold mb-4">
+                    Tu Asistente Personal de <span class="text-gradient">Nutrición 24/7</span>
+                </h2>
+                <p class="lead mb-4">
+                    Con NutriBot AI, tienes acceso instantáneo a recomendaciones nutricionales basadas en ciencia, análisis de productos en tiempo real y planes personalizados adaptados a tus necesidades específicas.
+                </p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="text-success me-3">
+                                <i class="fas fa-check-circle fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold">Respuestas Instantáneas</h5>
+                                <p class="text-muted small">Obtén respuestas nutricionales en segundos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="text-success me-3">
+                                <i class="fas fa-check-circle fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold">Personalización Total</h5>
+                                <p class="text-muted small">Adaptado a tus metas y preferencias</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="text-success me-3">
+                                <i class="fas fa-check-circle fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold">Base de Datos Actualizada</h5>
+                                <p class="text-muted small">+50,000 productos analizados</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="text-success me-3">
+                                <i class="fas fa-check-circle fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold">Seguimiento Continuo</h5>
+                                <p class="text-muted small">Monitoriza tu progreso nutricional</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ url_for('register') }}" class="btn btn-outline-primary mt-3">
+                    <i class="fas fa-bolt me-2"></i> Probar NutriBot Gratis
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Características -->
+<section class="py-5" id="features">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold display-5 mb-3">
+                CARACTERÍSTICAS <span class="text-gradient">DESTACADAS</span>
+            </h2>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">
+                Todo lo que necesitas en una plataforma inteligente diseñada por nutricionistas y desarrolladores para transformar tu relación con la alimentación.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="glass-card p-4 h-100 rounded-3">
+                    <div class="feature-icon mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-25 d-inline-flex align-items-center justify-content-center" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-robot text-primary fs-3"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Asistente IA Avanzado</h4>
+                    <p class="text-muted mb-3">
+                        Chat inteligente que analiza tus necesidades nutricionales y proporciona recomendaciones personalizadas en tiempo real.
+                    </p>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Análisis nutricional instantáneo
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Recomendaciones personalizadas
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Historial de conversaciones
+                        </li>
+                        <li>
+                            <i class="fas fa-check text-success me-2"></i>
+                            Integración multilingüe
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="glass-card p-4 h-100 rounded-3">
+                    <div class="feature-icon mb-3">
+                        <div class="rounded-circle bg-success bg-opacity-25 d-inline-flex align-items-center justify-content-center" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-qrcode text-success fs-3"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Gestión Inteligente</h4>
+                    <p class="text-muted mb-3">
+                        Escanea, organiza y analiza productos con nuestra base de datos de +50,000 productos actualizados semanalmente.
+                    </p>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Escaneo de códigos de barras
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Comparación de precios
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Análisis nutricional detallado
+                        </li>
+                        <li>
+                            <i class="fas fa-check text-success me-2"></i>
+                            Alertas de productos similares
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="glass-card p-4 h-100 rounded-3">
+                    <div class="feature-icon mb-3">
+                        <div class="rounded-circle bg-info bg-opacity-25 d-inline-flex align-items-center justify-content-center" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-heartbeat text-info fs-3"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Seguimiento de Salud</h4>
+                    <p class="text-muted mb-3">
+                        Monitorea tu progreso, establece objetivos y recibe insights sobre tu evolución nutricional con gráficos interactivos.
+                    </p>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Dashboard personalizado
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Reportes semanales/mensuales
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Alertas de salud personalizadas
+                        </li>
+                        <li>
+                            <i class="fas fa-check text-success me-2"></i>
+                            Objetivos y recordatorios
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Interactivo -->
+<section class="py-5 bg-dark" id="demo">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <h2 class="fw-bold mb-4">
+                    DEMO <span class="text-gradient">INTERACTIVO</span>
+                </h2>
+                <p class="lead mb-4">
+                    Descubre cómo funciona NutriChat en acción. Mira nuestro video demo para entender cómo podemos transformar tu rutina alimenticia desde el primer día.
+                </p>
+                <div class="mb-4">
+                    <div class="d-flex mb-3">
+                        <div class="text-success me-3">
+                            <i class="fas fa-play-circle fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold">Demo de 2 minutos</h5>
+                            <p class="text-muted">Aprende las funciones principales rápidamente</p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="text-success me-3">
+                            <i class="fas fa-hand-pointer fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold">Interfaz Intuitiva</h5>
+                            <p class="text-muted">Diseño centrado en el usuario para fácil navegación</p>
+                        </div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="text-success me-3">
+                            <i class="fas fa-chart-line fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold">Resultados Reales</h5>
+                            <p class="text-muted">Casos de éxito y transformaciones documentadas</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i> Comenzar Ahora
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <div class="glass-card p-4 rounded-3">
+                    <div class="demo-placeholder bg-darker rounded-2 p-5 text-center">
+                        <div class="demo-icon mb-4">
+                            <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" 
+                                 style="width: 80px; height: 80px;">
+                                <i class="fas fa-play text-white fs-2"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-3">Demo Interactivo de NutriChat</h4>
+                        <p class="text-muted mb-4">
+                            Haz clic para ver la demostración completa de todas las funcionalidades
+                        </p>
+                        <button class="btn btn-outline-light btn-lg" onclick="showDemoAlert()">
+                            <i class="fas fa-play-circle me-2"></i> Reproducir Demo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Final -->
+<section class="py-5">
+    <div class="container py-5 text-center">
+        <div class="glass-card p-5 rounded-3" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);">
+            <h2 class="fw-bold display-5 mb-4">
+                ¿Listo para transformar <span class="text-gradient">tu alimentación</span>?
+            </h2>
+            <p class="lead mb-4 mx-auto" style="max-width: 700px;">
+                Únete a miles de personas que ya están tomando el control de su salud nutricional con NutriChat. Sin compromiso, sin tarjeta de crédito requerida.
+            </p>
+            <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-shield-alt text-success me-2"></i>
+                    <span>Garantía de satisfacción de 30 días</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-file-contract text-success me-2"></i>
+                    <span>Sin contrato</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-times-circle text-success me-2"></i>
+                    <span>Cancelación en cualquier momento</span>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-rocket me-2"></i> Comenzar Gratis
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-5">
+                    <i class="fas fa-sign-in-alt me-2"></i> Ya Tengo Cuenta
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endif %}
+
+<script>
+function showDemoAlert() {
+    alert('🚀 Función de demo en desarrollo. Próximamente tendrás acceso a un demo interactivo completo.');
+}
+</script>
+
+<style>
+.text-gradient {
+    background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.glass-card-inner {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.bg-darker {
+    background-color: rgba(15, 23, 42, 0.8);
+}
+
+.chat-preview {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.message-content {
+    max-width: 80%;
+}
+
+.demo-placeholder {
+    border: 2px dashed rgba(148, 163, 184, 0.3);
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.feature-icon:hover {
+    transform: scale(1.1);
+}
+</style>
+
+{% endblock %}

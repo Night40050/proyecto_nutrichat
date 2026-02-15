@@ -1,6 +1,6 @@
 """
 Modelo de Usuario para NutriChat
-contiene las talas roles y usuarios
+contiene las tablas roles y usuarios
 """
 
 import uuid
@@ -10,11 +10,35 @@ from decimal import Decimal
 from typing import Optional, Dict, Any
 
 from sqlalchemy import Column, String, Boolean, DateTime, Numeric, Text, Integer, Date, BigInteger, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, relationship  # Añadir relationship aquí
 from email_validator import validate_email, EmailNotValidError
 
 from .database import db
+# Importar GUID desde db_types
+try:
+    from app.db_types import GUID
+except ImportError:
+    # Definir GUID localmente si no existe
+    from sqlalchemy.types import TypeDecorator, String
+    
+    class GUID(TypeDecorator):
+        """
+        UUID compatible con PostgreSQL y SQLite
+        """
+        impl = String(36)
+        cache_ok = True
+
+        def process_bind_param(self, value, dialect):
+            if value is None:
+                return None
+            if isinstance(value, uuid.UUID):
+                return str(value)
+            return str(uuid.UUID(value))
+
+        def process_result_value(self, value, dialect):
+            if value is None:
+                return None
+            return uuid.UUID(value)
 
 
 # ==================== ROL ====================
@@ -103,21 +127,18 @@ class Rol(db.Model):
         return self.nombre
 
 
+# ==================== USUARIO ====================
 class User(db.Model):
-    """
-    Modelo de Usuario simplificado para PostgreSQL (Supabase)
-    Autenticación únicamente por Telegram ID (sin contraseñas)
-    """
-
-    __tablename__ = 'usuarios'
+    """Modelo de usuario"""
+    __tablename__ = 'usuarios'  # ← A 'usuarios' para que coincida con la BD
 
     # Campos principales
-    usuario_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    usuario_id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # Información básica
-    nombre = Column(String, nullable=True)
-    email = Column(String, nullable=True, unique=True)
-    telefono = Column(String, nullable=True)
+    nombre = Column(String(100), nullable=True)
+    email = Column(String(100), nullable=True, unique=True)
+    telefono = Column(String(20), nullable=True)
     rol_id = Column(Integer, ForeignKey('roles.rol_id'), nullable=False, default=2)
 
     # Fechas y estado
@@ -136,6 +157,9 @@ class User(db.Model):
 
     # Integración con Telegram (campo principal para autenticación)
     telegram_id = Column(BigInteger, nullable=False, unique=True)
+
+    # Relación con rol
+    rol = relationship('Rol', backref='usuarios')
 
     def __init__(self, **kwargs):
         if 'perfil_json' not in kwargs:
@@ -333,7 +357,11 @@ class User(db.Model):
     def update_last_connection(self) -> None:
         """Actualizar última conexión del usuario"""
         self.ultima_conexion = datetime.utcnow()
-        db.session.commit()
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
 
     # ==================== REPRESENTACIÓN ====================
     

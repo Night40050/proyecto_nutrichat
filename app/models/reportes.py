@@ -8,7 +8,8 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 from sqlalchemy import Column, Text, Boolean, DateTime, BigInteger, ForeignKey, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from app.db_types import GUID
+from sqlalchemy import JSON
 
 from .database import db
 
@@ -24,18 +25,18 @@ class Reporte(db.Model):
     __tablename__ = 'reportes'
 
     # Campos principales
-    reporte_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reporte_id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # Relación con usuario (opcional, puede ser reporte del sistema)
-    usuario_id = Column(UUID(as_uuid=True), ForeignKey('usuarios.usuario_id'), nullable=True)
+    usuario_id = Column(GUID(), ForeignKey('usuarios.usuario_id'), nullable=True)
 
     # Información del reporte
     tipo = Column(Text, nullable=True)
     fecha_emision = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     # Datos estructurados
-    parametros = Column(JSONB, nullable=True)
-    contenido = Column(JSONB, nullable=True)
+    parametros = Column(JSON, nullable=True)
+    contenido = Column(JSON, nullable=True)
 
     # Enlace a archivo externo
     enlace_archivo = Column(Text, nullable=True)
@@ -157,8 +158,8 @@ class FeedbackRecomendacion(db.Model):
     feedback_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     # Relaciones
-    usuario_id = Column(UUID(as_uuid=True), ForeignKey('usuarios.usuario_id'), nullable=False)
-    lista_id = Column(UUID(as_uuid=True), ForeignKey('listas_mercado.lista_id'), nullable=False)
+    usuario_id = Column(GUID(), ForeignKey('usuarios.usuario_id'), nullable=False)
+    lista_id = Column(GUID(), ForeignKey('listas_mercado.lista_id'), nullable=False)
 
     # Información del feedback
     aceptada = Column(Boolean, nullable=True)

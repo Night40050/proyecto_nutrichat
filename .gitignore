@@ -1,25 +1,35 @@
-# Entornos virtuales
-.venv/
-env/
-
-# Cache Python
+# Python
 __pycache__/
-*.pyc
-*.pyo
-
-# Variables de entorno
+*.py[cod]
+*.so
+.Python
+env/
+venv/
 .env
+*.egg-info/
+dist/
+build/
 
-# Archivos de IDE
+# Base de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# Scraping results
+scraping_results_v8/
+scraping_results/
+screenshots/
+data/
+
+# IDE
 .vscode/
 .idea/
-.trae/
-project_rules.md
+*.swp
+*.swo
 
 # Logs
 *.log
+instance/
 
-# Base de datos local
-*.db
-*.sqlite3
-
+# Telegram bot
+telegram_session/

@@ -3,11 +3,11 @@ Modelo de ConfiguracionSistema para NutriChat
 Almacena parámetros globales del sistema que pueden cambiar sin modificar código
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Dict, Any, Optional
 
-from sqlalchemy import Column, Text, DateTime, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, Text, DateTime, func, JSON
+from sqlalchemy.orm import validates
 
 from .database import db
 
@@ -25,11 +25,11 @@ class ConfiguracionSistema(db.Model):
     # Campos principales
     clave = Column(Text, primary_key=True)
 
-    # Valor en formato JSONB (obligatorio)
-    valor = Column(JSONB, nullable=False)
+    # Valor en formato JSON (para compatibilidad con SQLite y PostgreSQL)
+    valor = Column(JSON, nullable=False)
 
     # Timestamp de actualización
-    actualizado_en = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    actualizado_en = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
     # ==================== MÉTODOS DE CREACIÓN ====================
 
@@ -146,4 +146,3 @@ class ConfiguracionSistema(db.Model):
 
     def __str__(self) -> str:
         return f"Configuración: {self.clave}"
-

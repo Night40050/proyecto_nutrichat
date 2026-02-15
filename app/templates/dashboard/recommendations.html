@@ -1,0 +1,750 @@
+{% extends "base.html" %}
+
+{% block title %}Recomendaciones IA - NutriChat{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    }
+    
+    .recommendation-card {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        height: 100%;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .recommendation-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .recommendation-card:hover::before {
+        transform: translateX(0);
+    }
+    
+    .recommendation-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        border-color: var(--primary-color);
+    }
+    
+    .score-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(16, 185, 129, 0.2);
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8rem;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .reason-tag {
+        background: rgba(59, 130, 246, 0.1);
+        border-left: 3px solid var(--secondary-color);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+    
+    .nutrition-card {
+        background: rgba(16, 185, 129, 0.05);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .nav-tabs {
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .nav-tabs .nav-link {
+        color: var(--text-muted);
+        border: none;
+        padding: 1rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+        border: none;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        background: transparent;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .cluster-badge {
+        background: rgba(139, 92, 246, 0.2);
+        color: var(--accent-color);
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .loading-skeleton {
+        background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-glass) 50%, var(--bg-card) 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        border-radius: 8px;
+    }
+    
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    .ai-badge {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 0.25rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header IA -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <h1 class="h2 text-white mb-0">
+                                <i class="fas fa-brain text-primary me-2"></i>
+                                Recomendaciones IA
+                            </h1>
+                            <span class="ai-badge">v2.0 · Multi-estrategia</span>
+                        </div>
+                        <p class="text-muted mb-0">
+                            Descubre productos personalizados con algoritmos de Machine Learning
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="refreshRecommendations()" id="refreshBtn">
+                            <i class="fas fa-sync-alt me-2"></i>Actualizar
+                        </button>
+                        <button class="btn btn-info" onclick="showNutritionAdvice()" id="nutritionBtn">
+                            <i class="fas fa-heartbeat me-2"></i>Análisis Nutricional
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats IA -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="glass-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-primary me-3">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Modelo Activo</h6>
+                        <h4 class="text-white mb-0" id="modelVersion">Deep Learning</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="glass-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-success me-3">
+                        <i class="fas fa-chart-line text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Confianza</h6>
+                        <h4 class="text-white mb-0" id="accuracy">94%</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="glass-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-info me-3">
+                        <i class="fas fa-database text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Productos Analizados</h6>
+                        <h4 class="text-white mb-0" id="totalProducts">0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="glass-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-warning me-3">
+                        <i class="fas fa-clock text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Estrategias</h6>
+                        <h4 class="text-white mb-0" id="strategies">4</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pestañas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-3">
+                <ul class="nav nav-tabs" id="recommendationTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="personalizadas-tab" data-bs-toggle="tab" 
+                                data-bs-target="#personalizadas" type="button" role="tab">
+                            <i class="fas fa-magic me-2"></i>Recomendaciones Personalizadas
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="similares-tab" data-bs-toggle="tab" 
+                                data-bs-target="#similares" type="button" role="tab">
+                            <i class="fas fa-project-diagram me-2"></i>Productos Similares
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tendencias-tab" data-bs-toggle="tab" 
+                                data-bs-target="#tendencias" type="button" role="tab">
+                            <i class="fas fa-fire me-2"></i>Tendencias
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="nutricional-tab" data-bs-toggle="tab" 
+                                data-bs-target="#nutricional" type="button" role="tab">
+                            <i class="fas fa-apple-alt me-2"></i>Análisis Nutricional
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido de pestañas -->
+    <div class="tab-content" id="recommendationTabsContent">
+        <!-- Personalizadas -->
+        <div class="tab-pane fade show active" id="personalizadas" role="tabpanel">
+            <div class="row" id="personalizedContainer">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="text-muted mt-3">La IA está analizando tus hábitos...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Similares -->
+        <div class="tab-pane fade" id="similares" role="tabpanel">
+            <div class="row" id="similarContainer">
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Selecciona un producto para ver similares</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tendencias -->
+        <div class="tab-pane fade" id="tendencias" role="tabpanel">
+            <div class="row" id="trendingContainer">
+                <!-- Se llenará con JS -->
+            </div>
+        </div>
+
+        <!-- Nutricional -->
+        <div class="tab-pane fade" id="nutricional" role="tabpanel">
+            <div class="row" id="nutritionContainer">
+                <!-- Se llenará con JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de detalles -->
+<div class="modal fade" id="productDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-white" id="detailProductName"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="glass-card p-4 mb-3">
+                            <h6 class="text-white mb-3">
+                                <i class="fas fa-tag text-primary me-2"></i>Información
+                            </h6>
+                            <p><strong>Categoría:</strong> <span id="detailCategory"></span></p>
+                            <p><strong>Precio:</strong> $<span id="detailPrice"></span></p>
+                            <p><strong>Fuente:</strong> <span id="detailSource"></span></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glass-card p-4 mb-3">
+                            <h6 class="text-white mb-3">
+                                <i class="fas fa-robot text-primary me-2"></i>Por qué te recomendamos esto
+                            </h6>
+                            <p id="detailReason" class="text-muted"></p>
+                            <div class="mt-3">
+                                <span class="badge bg-primary" id="detailScore"></span>
+                                <span class="badge bg-info ms-2" id="detailStrategy"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <button class="btn btn-success me-2" onclick="addToCart()">
+                        <i class="fas fa-cart-plus me-2"></i>Agregar a Lista
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="findSimilar()">
+                        <i class="fas fa-search me-2"></i>Ver Similares
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal consejos nutricionales -->
+<div class="modal fade" id="nutritionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-heartbeat text-danger me-2"></i>
+                    Análisis Nutricional Personalizado
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="nutritionModalBody">
+                <!-- Se llenará con JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allRecommendations = [];
+let currentProduct = null;
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    loadPersonalizedRecommendations();
+    loadTrendingProducts();
+});
+
+// Cargar recomendaciones personalizadas
+async function loadPersonalizedRecommendations() {
+    const container = document.getElementById('personalizedContainer');
+    
+    try {
+        // Simular llamada a API de recomendaciones
+        // En producción: const response = await fetch('/api/v1/recommendations');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Datos de ejemplo basados en productos reales
+        const recommendations = [
+            {
+                id: 1,
+                name: 'AGUACATE HASS UNIDAD',
+                price: 1450,
+                category: 'Frutas y Verduras',
+                reason: 'Basado en tu compra frecuente de aguacates',
+                score: 0.95,
+                strategy: 'Filtrado Colaborativo',
+                image: '🥑'
+            },
+            {
+                id: 2,
+                name: 'MANZANA VERDE 850 G',
+                price: 10100,
+                category: 'Frutas y Verduras',
+                reason: 'Usuarios con tus hábitos compran esto',
+                score: 0.89,
+                strategy: 'Deep Learning',
+                image: '🍎'
+            },
+            {
+                id: 3,
+                name: 'LECHE ENTERA X 1100 ML',
+                price: 4200,
+                category: 'Lácteos y Huevos',
+                reason: 'Completa tu desayuno saludable',
+                score: 0.87,
+                strategy: 'Reglas de Asociación',
+                image: '🥛'
+            },
+            {
+                id: 4,
+                name: 'HUEVOS X 30 UNIDADES',
+                price: 12500,
+                category: 'Lácteos y Huevos',
+                reason: 'Fuente de proteína recomendada',
+                score: 0.86,
+                strategy: 'Nutricional',
+                image: '🥚'
+            },
+            {
+                id: 5,
+                name: 'QUESO COSTEÑO X 250G',
+                price: 6800,
+                category: 'Lácteos y Huevos',
+                reason: 'Popular entre usuarios similares',
+                score: 0.84,
+                strategy: 'Tendencias',
+                image: '🧀'
+            },
+            {
+                id: 6,
+                name: 'TOMATE CHERRY 250 GR',
+                price: 3990,
+                category: 'Frutas y Verduras',
+                reason: 'Perfecto para ensaladas saludables',
+                score: 0.82,
+                strategy: 'Contenido',
+                image: '🍅'
+            }
+        ];
+        
+        allRecommendations = recommendations;
+        renderRecommendations(recommendations, container);
+        
+        // Actualizar stats
+        document.getElementById('totalProducts').textContent = '156';
+        document.getElementById('accuracy').textContent = '94%';
+        document.getElementById('strategies').textContent = '4';
+        
+    } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3"></i>
+                <p class="text-danger">Error cargando recomendaciones</p>
+                <button class="btn btn-primary mt-3" onclick="loadPersonalizedRecommendations()">
+                    <i class="fas fa-sync-alt me-2"></i>Reintentar
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Renderizar recomendaciones
+function renderRecommendations(recommendations, container) {
+    if (!recommendations || recommendations.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                <h5 class="text-white">No hay recomendaciones aún</h5>
+                <p class="text-muted">Agrega más productos para recibir sugerencias</p>
+                <a href="{{ url_for('scraping_page') }}" class="btn btn-primary">
+                    <i class="fas fa-robot me-2"></i>Hacer Scraping
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    recommendations.forEach(rec => {
+        html += `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="recommendation-card" onclick="showProductDetail(${JSON.stringify(rec).replace(/"/g, '&quot;')})">
+                    <div class="score-badge">
+                        <i class="fas fa-star me-1"></i>${Math.round(rec.score * 100)}% match
+                    </div>
+                    
+                    <div class="text-center mb-3">
+                        <span class="display-1">${rec.image}</span>
+                    </div>
+                    
+                    <h5 class="text-white mb-2">${rec.name}</h5>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-info">${rec.category}</span>
+                        <span class="text-success fw-bold fs-5">$${rec.price.toLocaleString()}</span>
+                    </div>
+                    
+                    <div class="reason-tag mb-3">
+                        <i class="fas fa-quote-left me-2 text-primary"></i>
+                        ${rec.reason}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-robot me-1"></i>${rec.strategy}
+                        </small>
+                        <span class="cluster-badge">
+                            <i class="fas fa-brain me-1"></i>IA Recomienda
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Cargar tendencias
+async function loadTrendingProducts() {
+    const container = document.getElementById('trendingContainer');
+    
+    const trending = [
+        {
+            name: 'D1 Top 100',
+            price: 6300,
+            category: 'Despensa',
+            trend: '+45% esta semana'
+        },
+        {
+            name: 'AGUACATE UNIDAD',
+            price: 6900,
+            category: 'Frutas y Verduras',
+            trend: '+32% esta semana'
+        },
+        {
+            name: 'LECHE DESLACTOSADA',
+            price: 2990,
+            category: 'Lácteos',
+            trend: '+28% esta semana'
+        }
+    ];
+    
+    let html = '';
+    trending.forEach(item => {
+        html += `
+            <div class="col-md-4 mb-3">
+                <div class="glass-card p-3">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="text-white">${item.name}</h6>
+                        <span class="text-success">${item.trend}</span>
+                    </div>
+                    <p class="text-muted mb-0">${item.category} · $${item.price.toLocaleString()}</p>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Mostrar detalle de producto
+function showProductDetail(product) {
+    currentProduct = product;
+    
+    document.getElementById('detailProductName').textContent = product.name;
+    document.getElementById('detailCategory').textContent = product.category;
+    document.getElementById('detailPrice').textContent = product.price.toLocaleString();
+    document.getElementById('detailSource').textContent = 'Recomendación IA';
+    document.getElementById('detailReason').textContent = product.reason;
+    document.getElementById('detailScore').textContent = `${Math.round(product.score * 100)}% match`;
+    document.getElementById('detailStrategy').textContent = product.strategy;
+    
+    new bootstrap.Modal(document.getElementById('productDetailModal')).show();
+}
+
+// Mostrar análisis nutricional
+async function showNutritionAdvice() {
+    const modalBody = document.getElementById('nutritionModalBody');
+    
+    modalBody.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="text-muted mt-3">Analizando tu dieta...</p>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('nutritionModal')).show();
+    
+    // Simular análisis
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    modalBody.innerHTML = `
+        <div class="nutrition-card">
+            <h6 class="text-white mb-3">
+                <i class="fas fa-chart-pie text-primary me-2"></i>
+                Balance de tu dieta
+            </h6>
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Frutas y Verduras</span>
+                        <span class="text-success">35%</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: 35%"></div>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Proteínas</span>
+                        <span class="text-info">25%</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-info" style="width: 25%"></div>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Lácteos</span>
+                        <span class="text-warning">20%</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: 20%"></div>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Granos/Cereales</span>
+                        <span class="text-primary">20%</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-primary" style="width: 20%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nutrition-card">
+            <h6 class="text-white mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                Recomendaciones
+            </h6>
+            <ul class="list-unstyled">
+                <li class="mb-2">
+                    <i class="fas fa-plus-circle text-success me-2"></i>
+                    Aumenta tu consumo de frutas y verduras
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-balance-scale text-info me-2"></i>
+                    Balancea mejor tus proteínas
+                </li>
+                <li class="mb-2">
+                    <i class="fas fa-check-circle text-primary me-2"></i>
+                    Buen consumo de lácteos
+                </li>
+            </ul>
+        </div>
+        
+        <div class="nutrition-card">
+            <h6 class="text-white mb-3">
+                <i class="fas fa-trophy text-warning me-2"></i>
+                Logros
+            </h6>
+            <p class="text-muted mb-2">
+                <i class="fas fa-medal text-warning me-2"></i>
+                Has mejorado tu dieta en un 15% este mes
+            </p>
+        </div>
+    `;
+}
+
+// Refrescar recomendaciones
+function refreshRecommendations() {
+    const btn = document.getElementById('refreshBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Actualizando...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        loadPersonalizedRecommendations();
+        btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Actualizar';
+        btn.disabled = false;
+        window.showNotification('✅ Recomendaciones actualizadas', 'success');
+    }, 1000);
+}
+
+// Agregar a lista de compras
+function addToCart() {
+    if (currentProduct) {
+        window.showNotification(`✅ "${currentProduct.name}" agregado a tu lista`, 'success');
+        bootstrap.Modal.getInstance(document.getElementById('productDetailModal')).hide();
+    }
+}
+
+// Buscar productos similares
+function findSimilar() {
+    bootstrap.Modal.getInstance(document.getElementById('productDetailModal')).hide();
+    
+    // Cambiar a pestaña de similares
+    document.getElementById('similares-tab').click();
+    
+    const container = document.getElementById('similarContainer');
+    container.innerHTML = `
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Buscando...</span>
+            </div>
+            <p class="text-muted mt-3">Buscando productos similares...</p>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        const similar = allRecommendations.filter(r => r.id !== currentProduct?.id).slice(0, 3);
+        renderRecommendations(similar, container);
+    }, 1000);
+}
+
+// Función global para notificaciones (usando la de base.html)
+window.showNotification = function(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+};
+</script>
+{% endblock %}

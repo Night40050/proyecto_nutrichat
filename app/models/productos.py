@@ -8,11 +8,37 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional, Dict, Any
 
-from sqlalchemy import Column, Text, Integer, Boolean, DateTime, Numeric, BigInteger, ForeignKey, UniqueConstraint, CheckConstraint, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import validates
+from sqlalchemy import Column, Text, Integer, Boolean, DateTime, Numeric, BigInteger, ForeignKey
+from sqlalchemy import UniqueConstraint, CheckConstraint, func
+from sqlalchemy import JSON
+from sqlalchemy.orm import validates, relationship
 
 from .database import db
+# Cambiar la importación para usar db_types si existe, o usar el GUID directamente
+try:
+    from app.db_types import GUID
+except ImportError:
+    from app.db_types import GUID
+    from sqlalchemy.types import TypeDecorator, String
+    
+    class GUID(TypeDecorator):
+        """
+        UUID compatible con PostgreSQL y SQLite
+        """
+        impl = String(36)
+        cache_ok = True
+
+        def process_bind_param(self, value, dialect):
+            if value is None:
+                return None
+            if isinstance(value, uuid.UUID):
+                return str(value)
+            return str(uuid.UUID(value))
+
+        def process_result_value(self, value, dialect):
+            if value is None:
+                return None
+            return uuid.UUID(value)
 
 
 # ==================== CATEGORIA ====================
@@ -107,7 +133,7 @@ class Producto(db.Model):
     __tablename__ = 'productos'
 
     # Campos principales
-    producto_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    producto_id = Column(GUID, primary_key=True, default=uuid.uuid4)
 
     # Información básica
     nombre = Column(Text, nullable=False)
@@ -259,7 +285,7 @@ class ProductoNutricion(db.Model):
     nutricion_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     # Relación con producto
-    producto_id = Column(UUID(as_uuid=True), ForeignKey('productos.producto_id', ondelete='CASCADE'), nullable=False)
+    producto_id = Column(GUID, ForeignKey('productos.producto_id', ondelete='CASCADE'), nullable=False)
 
     # Información de porción
     porcion_g = Column(Numeric(8, 3), nullable=True)
@@ -278,7 +304,7 @@ class ProductoNutricion(db.Model):
     colesterol_mg = Column(Numeric(10, 2), nullable=True)
 
     # Datos adicionales
-    micronutrientes = Column(JSONB, nullable=True)
+    micronutrientes = Column(JSON, nullable=True)
     ig = Column(Numeric(5, 2), nullable=True)
     carga_glucemica = Column(Numeric(6, 2), nullable=True)
     fuente = Column(Text, nullable=True)
@@ -510,7 +536,7 @@ class ProductoSnapshot(db.Model):
     snapshot_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     # Relación con producto
-    producto_id = Column(UUID(as_uuid=True), ForeignKey('productos.producto_id', ondelete='CASCADE'), nullable=False)
+    producto_id = Column(GUID, ForeignKey('productos.producto_id', ondelete='CASCADE'), nullable=False)
 
     # Fecha de captura
     fecha_captura = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -522,8 +548,8 @@ class ProductoSnapshot(db.Model):
     fuente = Column(Text, nullable=True)
 
     # Datos adicionales
-    impacto_ambiental = Column(JSONB, nullable=True)
-    atributos_json = Column(JSONB, nullable=True)
+    impacto_ambiental = Column(JSON, nullable=True)
+    atributos_json = Column(JSON, nullable=True)
 
     # ==================== MÉTODOS DE CREACIÓN ====================
 

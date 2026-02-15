@@ -1,0 +1,784 @@
+{% extends "base.html" %}
+
+{% block title %}Listas - NutriChat{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 text-white mb-0">
+                <i class="fas fa-list-check text-primary me-2"></i>
+                Mis Listas de Compra
+            </h1>
+            <p class="text-muted mb-0">Crea y gestiona tus listas de compra inteligentes</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createListModal">
+            <i class="fas fa-plus me-2"></i> Crear Nueva Lista
+        </button>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="glass-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-circle-sm bg-primary me-3">
+                        <i class="fas fa-list text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Total Listas</h6>
+                        <h3 class="text-white mb-0" id="totalLists">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="glass-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-circle-sm bg-success me-3">
+                        <i class="fas fa-boxes text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Productos Totales</h6>
+                        <h3 class="text-white mb-0" id="totalItems">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="glass-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-circle-sm bg-info me-3">
+                        <i class="fas fa-dollar-sign text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Valor Total</h6>
+                        <h3 class="text-white mb-0" id="totalValue">$0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listas de Compra -->
+    <div class="row" id="listsContainer">
+        <!-- Las listas se cargarán aquí -->
+    </div>
+
+    <div class="text-center mt-5">
+        <p class="text-muted">
+            <i class="fas fa-lightbulb text-warning me-1"></i>
+            Las listas inteligentes se generan automáticamente basadas en tus hábitos
+        </p>
+    </div>
+</div>
+
+<!-- Modal para crear lista -->
+<div class="modal fade" id="createListModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-plus-circle text-success me-2"></i>
+                    Crear Nueva Lista
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createListForm">
+                    <div class="mb-3">
+                        <label class="form-label text-white">Nombre de la lista *</label>
+                        <input type="text" class="form-control bg-darker text-white border-secondary" 
+                               id="listName" required placeholder="Ej: Compra semanal">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white">Descripción</label>
+                        <textarea class="form-control bg-darker text-white border-secondary" 
+                                  id="listDescription" rows="3" 
+                                  placeholder="¿Para qué es esta lista?"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="saveListBtn">
+                    <i class="fas fa-save me-2"></i>Crear Lista
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver/editar lista -->
+<div class="modal fade" id="listDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-white" id="detailListName"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-4" id="detailListDescription"></p>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-white mb-0">
+                        <i class="fas fa-shopping-cart me-2 text-primary"></i>
+                        Productos en la lista
+                    </h6>
+                    <button class="btn btn-sm btn-success" onclick="showAddItemModal()">
+                        <i class="fas fa-plus me-1"></i> Agregar Producto
+                    </button>
+                </div>
+                
+                <div id="listItemsContainer">
+                    <!-- Items se cargarán aquí -->
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-danger" id="deleteListBtn">
+                    <i class="fas fa-trash me-2"></i>Eliminar Lista
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar item -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-plus-circle text-success me-2"></i>
+                    Agregar Producto a la Lista
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addItemForm">
+                    <div class="mb-3">
+                        <label class="form-label text-white">Nombre del Producto *</label>
+                        <input type="text" class="form-control bg-darker text-white border-secondary" 
+                               id="itemName" required placeholder="Ej: Manzanas">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Cantidad</label>
+                            <input type="number" class="form-control bg-darker text-white border-secondary" 
+                                   id="itemQuantity" value="1" min="1">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Precio</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-darker text-white border-secondary">$</span>
+                                <input type="number" class="form-control bg-darker text-white border-secondary" 
+                                       id="itemPrice" value="0" min="0" step="100">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-white">Categoría</label>
+                        <select class="form-select bg-darker text-white border-secondary" id="itemCategory">
+                            <option value="">Seleccionar categoría</option>
+                            <option value="Frutas y Verduras">🍎 Frutas y Verduras</option>
+                            <option value="Lácteos y Huevos">🥛 Lácteos y Huevos</option>
+                            <option value="Carnes y Pescados">🍗 Carnes y Pescados</option>
+                            <option value="Despensa">📦 Despensa</option>
+                            <option value="Bebidas">🥤 Bebidas</option>
+                            <option value="Otros">📌 Otros</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="saveItemBtn">
+                    <i class="fas fa-save me-2"></i>Agregar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allLists = [];
+let currentListId = null;
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    loadLists();
+    
+    // Event listeners
+    document.getElementById('saveListBtn').addEventListener('click', createList);
+    document.getElementById('saveItemBtn').addEventListener('click', addItemToList);
+});
+
+// Cargar listas
+async function loadLists() {
+    const container = document.getElementById('listsContainer');
+    container.innerHTML = `
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="text-muted mt-3">Cargando tus listas...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch('/api/v1/lists');
+        const data = await response.json();
+        
+        if (data.success) {
+            allLists = data.lists || [];
+            updateStats();
+            renderLists();
+        } else {
+            showError('Error al cargar las listas');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error de conexión');
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3"></i>
+                <p class="text-danger">Error al cargar las listas</p>
+                <button class="btn btn-primary mt-3" onclick="loadLists()">
+                    <i class="fas fa-sync-alt me-2"></i>Reintentar
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Actualizar estadísticas
+function updateStats() {
+    const totalLists = allLists.length;
+    const totalItems = allLists.reduce((sum, list) => sum + (list.total_items || 0), 0);
+    const totalValue = allLists.reduce((sum, list) => sum + (list.total_value || 0), 0);
+    
+    document.getElementById('totalLists').textContent = totalLists;
+    document.getElementById('totalItems').textContent = totalItems;
+    document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString()}`;
+}
+
+// Renderizar listas
+function renderLists() {
+    const container = document.getElementById('listsContainer');
+    
+    if (allLists.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-clipboard-list text-muted fa-4x mb-3"></i>
+                <h4 class="text-white mb-2">No tienes listas</h4>
+                <p class="text-muted mb-4">Crea tu primera lista de compras</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createListModal">
+                    <i class="fas fa-plus me-2"></i>Crear Primera Lista
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    allLists.forEach(list => {
+        const itemsText = list.total_items === 1 ? '1 producto' : `${list.total_items} productos`;
+        const valueText = list.total_value > 0 ? `$${list.total_value.toLocaleString()}` : 'Sin productos';
+        
+        html += `
+            <div class="col-md-6 mb-4">
+                <div class="glass-card p-4 h-100 list-card" onclick="showListDetails(${list.id})">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="text-white mb-0">
+                            <i class="fas fa-${getListIcon(list.name)} me-2 text-primary"></i>
+                            ${list.name}
+                        </h5>
+                        <span class="badge ${list.status === 'active' ? 'bg-success' : 'bg-secondary'}">
+                            ${list.status === 'active' ? 'Activa' : 'Completada'}
+                        </span>
+                    </div>
+                    
+                    ${list.description ? `<p class="text-muted small mb-3">${list.description}</p>` : ''}
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <span class="badge bg-info me-2">${itemsText}</span>
+                            <span class="text-success small">${valueText}</span>
+                        </div>
+                        <small class="text-muted">
+                            ${list.updated_at ? new Date(list.updated_at).toLocaleDateString() : ''}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Obtener icono según nombre de lista
+function getListIcon(name) {
+    name = name.toLowerCase();
+    if (name.includes('semanal')) return 'calendar-week';
+    if (name.includes('desayuno')) return 'cup-straw';
+    if (name.includes('cena')) return 'utensils';
+    if (name.includes('fruta')) return 'apple-alt';
+    if (name.includes('verdura')) return 'carrot';
+    return 'list';
+}
+
+// Crear nueva lista
+async function createList() {
+    const name = document.getElementById('listName').value.trim();
+    if (!name) {
+        showError('El nombre de la lista es requerido');
+        return;
+    }
+    
+    const saveBtn = document.getElementById('saveListBtn');
+    const originalText = saveBtn.innerHTML;
+    
+    const listData = {
+        name: name,
+        description: document.getElementById('listDescription').value.trim()
+    };
+    
+    try {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creando...';
+        
+        const response = await fetch('/api/v1/lists', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(listData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Limpiar formulario
+            document.getElementById('listName').value = '';
+            document.getElementById('listDescription').value = '';
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createListModal'));
+            modal.hide();
+            
+            // Recargar listas
+            await loadLists();
+            
+            showSuccess('✅ Lista creada correctamente');
+        } else {
+            showError('❌ Error: ' + (data.message || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('❌ Error:', error);
+        showError('❌ Error al conectar con el servidor');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+    }
+}
+
+// Mostrar detalles de la lista
+async function showListDetails(listId) {
+    const list = allLists.find(l => l.id === listId);
+    if (!list) return;
+    
+    currentListId = listId;
+    
+    document.getElementById('detailListName').textContent = list.name;
+    document.getElementById('detailListDescription').textContent = list.description || 'Sin descripción';
+    
+    // Configurar botón de eliminar
+    document.getElementById('deleteListBtn').onclick = function() {
+        deleteList(listId);
+    };
+    
+    // Cargar items de la lista
+    await loadListItems(listId);
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('listDetailsModal'));
+    modal.show();
+}
+
+// Cargar items de una lista
+async function loadListItems(listId) {
+    const container = document.getElementById('listItemsContainer');
+    container.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="text-muted small mt-2">Cargando productos...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`/api/v1/lists/${listId}/items`);
+        const data = await response.json();
+        
+        if (data.success) {
+            renderListItems(data.items || []);
+        } else {
+            container.innerHTML = '<p class="text-danger text-center">Error al cargar productos</p>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = '<p class="text-danger text-center">Error de conexión</p>';
+    }
+}
+
+// Renderizar items de la lista
+function renderListItems(items) {
+    const container = document.getElementById('listItemsContainer');
+    
+    if (items.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-box-open text-muted fa-3x mb-3"></i>
+                <p class="text-muted">No hay productos en esta lista</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="list-group">';
+    items.forEach(item => {
+        html += `
+            <div class="list-item d-flex justify-content-between align-items-center p-3 mb-2" data-item-id="${item.id}">
+                <div class="d-flex align-items-center">
+                    <input class="form-check-input me-3" type="checkbox" 
+                           ${item.checked ? 'checked' : ''} 
+                           onchange="toggleItem(${item.id}, ${currentListId})">
+                    <div>
+                        <span class="${item.checked ? 'text-muted text-decoration-line-through' : 'text-white'}">
+                            ${item.product_name}
+                        </span>
+                        ${item.category ? `<small class="text-muted d-block">${item.category}</small>` : ''}
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="text-success me-3">$${(item.price || 0).toLocaleString()}</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteItem(${item.id}, ${currentListId})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Mostrar modal para agregar item
+function showAddItemModal() {
+    // Limpiar formulario
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemQuantity').value = '1';
+    document.getElementById('itemPrice').value = '0';
+    document.getElementById('itemCategory').value = '';
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('addItemModal'));
+    modal.show();
+}
+
+// Agregar item a la lista
+async function addItemToList() {
+    const name = document.getElementById('itemName').value.trim();
+    if (!name) {
+        showError('El nombre del producto es requerido');
+        return;
+    }
+    
+    const saveBtn = document.getElementById('saveItemBtn');
+    const originalText = saveBtn.innerHTML;
+    
+    const itemData = {
+        product_name: name,
+        quantity: parseInt(document.getElementById('itemQuantity').value) || 1,
+        price: parseFloat(document.getElementById('itemPrice').value) || 0,
+        category: document.getElementById('itemCategory').value || 'General'
+    };
+    
+    try {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Agregando...';
+        
+        const response = await fetch(`/api/v1/lists/${currentListId}/items`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(itemData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addItemModal'));
+            modal.hide();
+            
+            // Recargar items
+            await loadListItems(currentListId);
+            
+            // Actualizar lista en el array
+            const listIndex = allLists.findIndex(l => l.id === currentListId);
+            if (listIndex !== -1) {
+                allLists[listIndex].total_items = (allLists[listIndex].total_items || 0) + 1;
+                allLists[listIndex].total_value = (allLists[listIndex].total_value || 0) + itemData.price;
+            }
+            
+            // Actualizar estadísticas
+            updateStats();
+            
+            showSuccess('✅ Producto agregado correctamente');
+        } else {
+            showError('❌ Error: ' + (data.message || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('❌ Error:', error);
+        showError('❌ Error al conectar con el servidor');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+    }
+}
+
+// Marcar/desmarcar item
+async function toggleItem(itemId, listId) {
+    try {
+        const response = await fetch(`/api/v1/lists/${listId}/items/${itemId}/toggle`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            showError('Error al actualizar el estado');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error de conexión');
+    }
+}
+
+// Eliminar item de la lista
+async function deleteItem(itemId, listId) {
+    if (!confirm('¿Eliminar este producto de la lista?')) return;
+    
+    try {
+        const response = await fetch(`/api/v1/lists/${listId}/items/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Recargar items
+            await loadListItems(listId);
+            
+            // Recargar listas para actualizar contadores
+            await loadLists();
+            
+            showSuccess('✅ Producto eliminado');
+        } else {
+            showError('❌ Error al eliminar');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error de conexión');
+    }
+}
+
+// Eliminar lista completa
+async function deleteList(listId) {
+    if (!confirm('¿Estás seguro de eliminar esta lista completa?')) return;
+    
+    const deleteBtn = document.getElementById('deleteListBtn');
+    const originalText = deleteBtn.innerHTML;
+    
+    try {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Eliminando...';
+        
+        const response = await fetch(`/api/v1/lists/${listId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('listDetailsModal'));
+            modal.hide();
+            
+            // Recargar listas
+            await loadLists();
+            
+            showSuccess('✅ Lista eliminada correctamente');
+        } else {
+            showError('❌ Error al eliminar la lista');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error de conexión');
+    } finally {
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = originalText;
+    }
+}
+
+// Mostrar mensaje de éxito
+function showSuccess(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 3000);
+}
+
+// Mostrar mensaje de error
+function showError(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 end-0 m-3';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.innerHTML = `
+        <i class="fas fa-exclamation-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+</script>
+
+<style>
+.list-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.list-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-circle-sm {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 12px;
+}
+
+.bg-darker {
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+    color: white !important;
+}
+
+.bg-darker:focus {
+    background-color: rgba(15, 23, 42, 0.95) !important;
+    border-color: #10B981 !important;
+    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+}
+
+.list-group {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.list-item {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.list-item:hover {
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.form-check-input:checked {
+    background-color: #10B981;
+    border-color: #10B981;
+}
+
+.btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-content {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(10px);
+}
+
+.modal-header {
+    border-bottom-color: rgba(148, 163, 184, 0.3);
+}
+
+.modal-footer {
+    border-top-color: rgba(148, 163, 184, 0.3);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #10B981;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0e9e6e;
+}
+</style>
+{% endblock %}

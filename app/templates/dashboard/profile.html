@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil - NutriChat{% endblock %}
+
+{% block main_class %}container py-5{% endblock %}
+
+{% block content %}
+<div class="mb-5">
+    <h1 class="fw-bold">
+        <i class="fas fa-user-circle text-primary me-2"></i>
+        Mi Perfil
+    </h1>
+    <p class="text-muted">Gestiona tu información personal y preferencias</p>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="glass-card p-4 rounded-3 text-center">
+            <div class="mb-3">
+                <div class="avatar-circle mx-auto d-flex align-items-center justify-content-center" 
+                     style="width: 100px; height: 100px; background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%); border-radius: 50%;">
+                    <i class="fas fa-user text-white" style="font-size: 3rem;"></i>
+                </div>
+            </div>
+            <h4 class="fw-bold mb-1" id="profile-name">{{ session.user_name }}</h4>
+            <p class="text-muted mb-3">
+                <i class="fas fa-id-badge text-info me-1"></i> 
+                <span id="profile-telegram">{{ session.user_telegram_id }}</span>
+            </p>
+            <div class="badge bg-gradient-primary mb-3">Usuario Premium</div>
+            <p class="text-muted small">Miembro desde hoy</p>
+        </div>
+        
+        <!-- Estadísticas rápidas -->
+        <div class="glass-card p-3 rounded-3 mt-3">
+            <h6 class="fw-bold mb-2">
+                <i class="fas fa-chart-line me-1"></i> Tu Actividad
+            </h6>
+            <div class="row text-center">
+                <div class="col-6">
+                    <div class="fw-bold" id="stats-products">0</div>
+                    <div class="small text-muted">Productos</div>
+                </div>
+                <div class="col-6">
+                    <div class="fw-bold" id="stats-lists">2</div>
+                    <div class="small text-muted">Listas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Formulario de edición de perfil -->
+        <div class="glass-card p-4 rounded-3 mb-4">
+            <h5 class="fw-bold mb-4">
+                <i class="fas fa-edit me-2"></i> Editar Información Personal
+            </h5>
+            
+            <form id="editProfileForm">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control bg-dark" 
+                               id="input-name" 
+                               value="{{ session.user_name }}"
+                               required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Telegram ID</label>
+                        <input type="text" class="form-control bg-dark" 
+                               id="input-telegram" 
+                               value="{{ session.user_telegram_id }}"
+                               disabled>
+                        <div class="form-text text-muted">ID de Telegram no se puede cambiar</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control bg-dark" 
+                               id="input-email" 
+                               placeholder="tu@email.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control bg-dark" 
+                               id="input-phone" 
+                               placeholder="+34 123 456 789">
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Guardar Cambios
+                    </button>
+                    <button type="button" class="btn btn-outline-light" id="btn-cancel">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Configuración -->
+        <div class="glass-card p-4 rounded-3">
+            <h5 class="fw-bold mb-4">
+                <i class="fas fa-cog me-2"></i> Configuración
+            </h5>
+            
+            <div class="mb-3">
+                <h6 class="fw-bold mb-3">Notificaciones</h6>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="notif-email" checked>
+                    <label class="form-check-label" for="notif-email">
+                        <i class="fas fa-envelope me-2"></i> Notificaciones por Email
+                    </label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="notif-push" checked>
+                    <label class="form-check-label" for="notif-push">
+                        <i class="fas fa-bell me-2"></i> Notificaciones Push
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="notif-weekly">
+                    <label class="form-check-label" for="notif-weekly">
+                        <i class="fas fa-calendar-week me-2"></i> Resumen Semanal
+                    </label>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <button class="btn btn-outline-light" id="btn-save-settings">
+                    <i class="fas fa-save me-1"></i> Guardar Configuración
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cargar estadísticas
+async function loadStats() {
+    try {
+        // Cargar productos
+        const productsResponse = await fetch('/api/v1/products/items');
+        const productsData = await productsResponse.json();
+        
+        if (productsData.success) {
+            document.getElementById('stats-products').textContent = 
+                productsData.count || 0;
+        }
+    } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+    }
+}
+
+// Manejar formulario de edición de perfil
+document.getElementById('editProfileForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('input-name').value
+    };
+    
+    try {
+        const response = await fetch('/api/v1/settings/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Actualizar nombre en la página
+            document.getElementById('profile-name').textContent = formData.name;
+            
+            // Mostrar mensaje de éxito
+            alert('✅ Perfil actualizado correctamente');
+            
+            // Recargar la página después de 1 segundo
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error actualizando perfil:', error);
+        alert('❌ Error al actualizar el perfil');
+    }
+});
+
+// Manejar configuración
+document.getElementById('btn-save-settings')?.addEventListener('click', async function() {
+    const settings = {
+        email_notifications: document.getElementById('notif-email').checked,
+        push_notifications: document.getElementById('notif-push').checked,
+        weekly_summary: document.getElementById('notif-weekly').checked
+    };
+    
+    try {
+        const response = await fetch('/api/v1/settings/notifications', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(settings)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Configuración guardada correctamente');
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error guardando configuración:', error);
+        alert('❌ Error al guardar la configuración');
+    }
+});
+
+// Cancelar edición
+document.getElementById('btn-cancel')?.addEventListener('click', function() {
+    document.getElementById('input-name').value = "{{ session.user_name }}";
+});
+
+// Cargar datos al iniciar
+document.addEventListener('DOMContentLoaded', loadStats);
+</script>
+
+<style>
+.avatar-circle {
+    transition: transform 0.3s ease;
+}
+
+.avatar-circle:hover {
+    transform: scale(1.05);
+}
+
+.form-check-input:checked {
+    background-color: #10B981;
+    border-color: #10B981;
+}
+</style>
+{% endblock %}

@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import Optional, Dict, Any
 
 from sqlalchemy import Column, Text, Numeric, BigInteger, ForeignKey, DateTime, func
-from sqlalchemy.dialects.postgresql import UUID
+from app.db_types import GUID
 
 from .database import db
 
@@ -25,10 +25,10 @@ class ListaMercado(db.Model):
     __tablename__ = 'listas_mercado'
 
     # Campos principales
-    lista_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    lista_id = Column(GUID(), primary_key=True, default=uuid.uuid4)
 
     # Relación con usuario
-    usuario_id = Column(UUID(as_uuid=True), ForeignKey('usuarios.usuario_id'), nullable=False)
+    usuario_id = Column(GUID(), ForeignKey('usuarios.usuario_id'), nullable=False)
 
     # Información de la lista
     nombre = Column(Text, nullable=True)
@@ -150,8 +150,8 @@ class ProductosEnLista(db.Model):
     producto_lista_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     # Relaciones
-    lista_id = Column(UUID(as_uuid=True), ForeignKey('listas_mercado.lista_id', ondelete='CASCADE'), nullable=False)
-    producto_id = Column(UUID(as_uuid=True), ForeignKey('productos.producto_id'), nullable=False)
+    lista_id = Column(GUID(), ForeignKey('listas_mercado.lista_id', ondelete='CASCADE'), nullable=False)
+    producto_id = Column(GUID(), ForeignKey('productos.producto_id'), nullable=False)
 
     # Información del producto en la lista
     cantidad = Column(Numeric(8, 3), nullable=False, default=Decimal('1'))

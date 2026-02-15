@@ -1,0 +1,171 @@
+/* Estilos personalizados para NutriChat */
+
+:root {
+    --primary-color: #28a745;
+    --secondary-color: #6c757d;
+    --accent-color: #17a2b8;
+    --dark-color: #343a40;
+    --light-color: #f8f9fa;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #e9ecef;
+    min-height: 100vh;
+    padding-top: 70px; /* Para la navbar fija */
+}
+
+/* Cards */
+.card {
+    background-color: #2d3748;
+    border: 1px solid #4a5568;
+    border-radius: 10px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Botones */
+.btn-success {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(45deg, #218838, #1ba37e);
+    transform: translateY(-2px);
+}
+
+/* Navbar */
+.navbar {
+    background-color: rgba(33, 37, 41, 0.95) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* Chat bubbles */
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    margin-bottom: 10px;
+    clear: both;
+}
+
+.chat-bubble.user {
+    background-color: var(--primary-color);
+    color: white;
+    float: right;
+    border-bottom-right-radius: 5px;
+}
+
+.chat-bubble.bot {
+    background-color: var(--secondary-color);
+    color: white;
+    float: left;
+    border-bottom-left-radius: 5px;
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+/* Feature icons */
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+/* Formularios */
+.form-control, .form-select {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e9ecef;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #2d3748;
+    border-color: var(--primary-color);
+    color: #e9ecef;
+    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+}
+
+/* Tablas */
+.table {
+    color: #e9ecef;
+    background-color: #2d3748;
+}
+
+.table-dark {
+    --bs-table-bg: #2d3748;
+    --bs-table-striped-bg: #374151;
+    --bs-table-hover-bg: #4a5568;
+}
+
+/* Modales */
+.modal-content {
+    background-color: #2d3748;
+    border: 1px solid #4a5568;
+}
+
+.modal-header {
+    border-bottom: 1px solid #4a5568;
+}
+
+.modal-footer {
+    border-top: 1px solid #4a5568;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .lead {
+        font-size: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}

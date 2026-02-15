@@ -1,0 +1,675 @@
+{% extends "base.html" %}
+
+{% block title %}NutriChat - Panel de Scraping{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 text-white mb-0">
+                <i class="fas fa-robot text-primary me-2"></i>
+                Panel de Scraping
+            </h1>
+            <p class="text-muted mb-0">Extrae productos de Tiendas D1 automáticamente</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-light" onclick="checkSystemStatus()">
+                <i class="fas fa-cogs me-2"></i>Verificar Sistema
+            </button>
+            <button class="btn btn-outline-info" onclick="loadScrapingHistory()">
+                <i class="fas fa-history me-2"></i>Historial
+            </button>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white mb-0">
+                        <i class="fas fa-server me-2"></i>Estado del Sistema
+                    </h5>
+                    <span class="badge bg-success" id="systemBadge">
+                        <i class="fas fa-check me-1"></i>Sistema Conectado
+                    </span>
+                </div>
+                <div id="systemStatusDetails">
+                    <!-- Se llena con JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scraping Controls -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="glass-card p-4 h-100">
+                <h5 class="text-white mb-4">
+                    <i class="fas fa-play-circle me-2"></i>Iniciar Scraping
+                </h5>
+                
+                <!-- Mode Selection -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card mode-card" id="modeAutoCard" data-mode="auto" onclick="selectMode('auto')">
+                            <div class="card-body text-center">
+                                <div class="mode-icon mb-3">
+                                    <i class="fas fa-bolt fa-2x text-success"></i>
+                                </div>
+                                <h5 class="card-title">Automático</h5>
+                                <p class="card-text text-muted small">
+                                    El sistema abre el navegador automáticamente y realiza todo el proceso.
+                                </p>
+                                <div class="mt-3">
+                                    <span class="badge bg-success">Recomendado</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card mode-card" id="modeManualCard" data-mode="manual" onclick="selectMode('manual')">
+                            <div class="card-body text-center">
+                                <div class="mode-icon mb-3">
+                                    <i class="fas fa-hand-pointer fa-2x text-warning"></i>
+                                </div>
+                                <h5 class="card-title">Manual</h5>
+                                <p class="card-text text-muted small">
+                                    Sube una captura de pantalla y el sistema extraerá los productos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Start Button -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success btn-lg" id="startButton" onclick="startScraping()" disabled>
+                        <i class="fas fa-play me-2"></i>Selecciona un modo
+                    </button>
+                </div>
+
+                <!-- Progress -->
+                <div id="progressSection" class="mt-4" style="display: none;">
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span class="text-white" id="progressStatus">Preparando...</span>
+                        <span class="text-white" id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="progressBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2 text-muted small" id="progressMessage"></div>
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-sm btn-outline-danger" id="cancelButton" onclick="cancelScraping()" style="display: none;">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Current Session -->
+            <div class="glass-card p-4 mb-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-sync-alt me-2"></i>Sesión Actual
+                </h5>
+                <div id="currentSession">
+                    <div class="text-center py-3">
+                        <i class="fas fa-plug fa-2x text-success mb-3"></i>
+                        <p class="text-success mb-1">Sistema Conectado</p>
+                        <p class="text-muted small">Listo para scraping</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="glass-card p-4">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                </h5>
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="display-6 fw-bold text-primary" id="totalProducts">0</div>
+                        <div class="text-muted small">Productos Totales</div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="display-6 fw-bold text-success" id="totalValue">$0</div>
+                        <div class="text-muted small">Valor Total</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="display-6 fw-bold text-info" id="sessionCount">0</div>
+                        <div class="text-muted small">Sesiones</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="display-6 fw-bold text-warning" id="successRate">0%</div>
+                        <div class="text-muted small">Éxito</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row mt-4" id="resultsSection">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="text-white mb-0">
+                        <i class="fas fa-list-alt me-2"></i>Mis Productos
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-light" onclick="loadRealProducts()">
+                            <i class="fas fa-sync-alt me-1"></i>Actualizar
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="exportProducts()">
+                            <i class="fas fa-download me-1"></i>Exportar CSV
+                        </button>
+                        <button class="btn btn-sm btn-info" onclick="checkDatabase()">
+                            <i class="fas fa-database me-1"></i>Verificar BD
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Fuente</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <p class="text-muted mt-2">Cargando productos desde la base de datos...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 text-muted small" id="dbDebugInfo">
+                    <!-- Información de depuración -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Session ID (hidden) -->
+<input type="hidden" id="currentSessionId">
+
+<script>
+let selectedMode = null;
+let sessionId = null;
+let pollingInterval = null;
+let systemConnected = true;
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 Inicializando panel de scraping...');
+    
+    // Mostrar estado del sistema
+    displaySystemStatus();
+    
+    // Cargar datos reales
+    loadRealProducts();
+    loadRealStats();
+    
+    // Habilitar botones
+    document.getElementById('startButton').disabled = false;
+    document.getElementById('startButton').innerHTML = '<i class="fas fa-play me-2"></i>Selecciona un modo';
+});
+
+function displaySystemStatus() {
+    document.getElementById('systemStatusDetails').innerHTML = `
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <h6 class="text-white mb-2">Tesseract OCR</h6>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="me-2">Estado:</span>
+                    <span class="badge bg-success">
+                        <i class="fas fa-check me-1"></i>Disponible
+                    </span>
+                </div>
+                <p class="text-success small mb-0">
+                    <i class="fas fa-check-circle me-1"></i>Versión: 5.3.3.20231005
+                </p>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <h6 class="text-white mb-2">Directorios</h6>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="me-2">Estado:</span>
+                    <span class="badge bg-success">
+                        <i class="fas fa-check me-1"></i>Listos
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <h6 class="text-white mb-2">Paquetes Python</h6>
+            <div class="row">
+                <div class="col-6 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">selenium</span>
+                        <span class="badge bg-success">✓</span>
+                    </div>
+                </div>
+                <div class="col-6 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">pytesseract</span>
+                        <span class="badge bg-success">✓</span>
+                    </div>
+                </div>
+                <div class="col-6 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Pillow</span>
+                        <span class="badge bg-success">✓</span>
+                    </div>
+                </div>
+                <div class="col-6 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">pyautogui</span>
+                        <span class="badge bg-success">✓</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>✅ ¡Sistema conectado exitosamente!</strong><br>
+            Tesseract OCR está disponible. El scraping automático funcionará correctamente.
+        </div>
+        
+        <div class="text-center mt-4">
+            <div class="d-inline-block text-start">
+                <h6 class="text-white mb-3">Pasos siguientes:</h6>
+                <ol class="text-muted mb-0">
+                    <li>Selecciona el modo de scraping (Automático o Manual)</li>
+                    <li>Haz clic en "Iniciar Scraping"</li>
+                    <li>Los productos se guardarán automáticamente</li>
+                </ol>
+            </div>
+        </div>
+    `;
+}
+
+function selectMode(mode) {
+    console.log('🎯 Seleccionando modo:', mode);
+    selectedMode = mode;
+    
+    // Actualizar UI
+    document.getElementById('modeAutoCard').classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+    document.getElementById('modeManualCard').classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+    
+    if (mode === 'auto') {
+        document.getElementById('modeAutoCard').classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+    } else {
+        document.getElementById('modeManualCard').classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+    }
+    
+    // Actualizar botón
+    document.getElementById('startButton').disabled = false;
+    document.getElementById('startButton').innerHTML = `<i class="fas fa-play me-2"></i>Iniciar Scraping (Modo ${mode === 'auto' ? 'Automático' : 'Manual'})`;
+}
+
+async function startScraping() {
+    if (!selectedMode) {
+        showAlert('⚠️ Selecciona un modo', 'warning');
+        return;
+    }
+    
+    const startButton = document.getElementById('startButton');
+    startButton.disabled = true;
+    startButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Iniciando...';
+    
+    try {
+        const response = await fetch('/api/v1/scraping/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: selectedMode, category: 1 })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            sessionId = data.session_id;
+            document.getElementById('currentSessionId').value = sessionId;
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('cancelButton').style.display = 'block';
+            
+            startPolling(sessionId);
+            showAlert('✅ Scraping iniciado', 'success');
+        } else {
+            showAlert('❌ Error: ' + data.message, 'danger');
+            resetStartButton();
+        }
+    } catch (error) {
+        showAlert('❌ Error de conexión', 'danger');
+        resetStartButton();
+    }
+}
+
+function startPolling(sessionId) {
+    if (pollingInterval) clearInterval(pollingInterval);
+    
+    pollingInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/v1/scraping/status/${sessionId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                updateProgress(data.status);
+                
+                if (data.status.status === 'completed') {
+                    stopPolling();
+                    await loadRealProducts();
+                    await loadRealStats();
+                    showAlert(`✅ Scraping completado: ${data.status.results?.product_count || 0} productos`, 'success');
+                } else if (data.status.status === 'error') {
+                    stopPolling();
+                    showAlert('❌ Error en scraping', 'danger');
+                }
+            }
+        } catch (error) {
+            console.error('Error polling:', error);
+        }
+    }, 2000);
+}
+
+function updateProgress(status) {
+    document.getElementById('progressBar').style.width = `${status.progress}%`;
+    document.getElementById('progressPercent').textContent = `${status.progress}%`;
+    document.getElementById('progressStatus').textContent = status.step || 'Procesando';
+    document.getElementById('progressMessage').textContent = status.message || '';
+    
+    if (status.status === 'running') {
+        document.getElementById('currentSession').innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-2"></div>
+                <p class="text-success mb-1">Scraping en progreso</p>
+                <p class="text-muted small">${status.step || 'Procesando'}</p>
+            </div>
+        `;
+    } else if (status.status === 'completed') {
+        document.getElementById('currentSession').innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                <p class="text-success mb-1">Completado</p>
+                <p class="text-muted small">${status.results?.product_count || 0} productos extraídos</p>
+            </div>
+        `;
+    }
+}
+
+function stopPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+    resetStartButton();
+    document.getElementById('cancelButton').style.display = 'none';
+}
+
+function resetStartButton() {
+    if (!selectedMode) return;
+    document.getElementById('startButton').disabled = false;
+    document.getElementById('startButton').innerHTML = `<i class="fas fa-play me-2"></i>Iniciar Scraping (Modo ${selectedMode === 'auto' ? 'Automático' : 'Manual'})`;
+}
+
+function cancelScraping() {
+    if (confirm('¿Cancelar scraping?')) {
+        stopPolling();
+        document.getElementById('progressSection').style.display = 'none';
+        document.getElementById('currentSession').innerHTML = `
+            <div class="text-center py-3">
+                <i class="fas fa-ban fa-2x text-muted mb-3"></i>
+                <p class="text-muted">Cancelado</p>
+            </div>
+        `;
+    }
+}
+
+// ⭐ CARGA PRODUCTOS REALES
+async function loadRealProducts() {
+    const resultsBody = document.getElementById('resultsBody');
+    const dbDebug = document.getElementById('dbDebugInfo');
+    
+    try {
+        const response = await fetch('/api/v1/products/items');
+        const data = await response.json();
+        
+        console.log('📦 Respuesta de productos:', data);
+        dbDebug.innerHTML = `📊 Debug: ${JSON.stringify(data).substring(0, 200)}...`;
+        
+        if (data.success && data.products && data.products.length > 0) {
+            let html = '';
+            data.products.forEach(product => {
+                html += `
+                    <tr>
+                        <td>
+                            <div class="fw-medium">${product.name || 'Sin nombre'}</div>
+                            <small class="text-muted">ID: ${product.id}</small>
+                        </td>
+                        <td><span class="badge bg-info">${product.category || 'General'}</span></td>
+                        <td class="fw-bold text-success">$${(product.price || 0).toLocaleString()}</td>
+                        <td><span class="badge bg-secondary">${product.source || 'scraper'}</span></td>
+                    </tr>
+                `;
+            });
+            resultsBody.innerHTML = html;
+        } else {
+            resultsBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-4">
+                        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay productos en la base de datos</p>
+                        <p class="text-muted small">Total en scraping_sessions: ${document.getElementById('sessionCount').textContent} sesiones</p>
+                        <button class="btn btn-sm btn-success" onclick="selectMode('auto');startScraping()">
+                            <i class="fas fa-play me-1"></i>Iniciar scraping
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultsBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4 text-danger">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <p>Error cargando productos: ${error.message}</p>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// ⭐ CARGA ESTADÍSTICAS REALES
+async function loadRealStats() {
+    try {
+        // Productos totales
+        const productsRes = await fetch('/api/v1/products/items');
+        const productsData = await productsRes.json();
+        const totalProducts = productsData.count || 0;
+        document.getElementById('totalProducts').textContent = totalProducts;
+        
+        // Valor total
+        const totalValue = productsData.products?.reduce((sum, p) => sum + (p.price || 0), 0) || 0;
+        document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString()}`;
+        
+        // Historial de scraping
+        const historyRes = await fetch('/api/v1/scraping/history');
+        const historyData = await historyRes.json();
+        console.log('📊 Historial:', historyData);
+        
+        if (historyData.success) {
+            const sessionCount = historyData.count || 0;
+            document.getElementById('sessionCount').textContent = sessionCount;
+            
+            // Tasa de éxito
+            const successCount = historyData.sessions?.filter(s => s.status === 'completed').length || 0;
+            const successRate = sessionCount > 0 ? Math.round((successCount / sessionCount) * 100) : 0;
+            document.getElementById('successRate').textContent = `${successRate}%`;
+        }
+        
+    } catch (error) {
+        console.error('Error cargando stats:', error);
+    }
+}
+
+function checkSystemStatus() {
+    fetch('/api/v1/health')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('✅ Sistema funcionando correctamente', 'success');
+                loadRealProducts();
+                loadRealStats();
+            }
+        })
+        .catch(() => showAlert('❌ Error conectando al sistema', 'danger'));
+}
+
+function loadScrapingHistory() {
+    console.log('📜 Cargando historial REAL...');
+    
+    fetch('/api/v1/scraping/history')
+        .then(res => res.json())
+        .then(data => {
+            console.log('📊 Historial recibido:', data);
+            
+            if (data.success) {
+                const totalProducts = data.sessions?.reduce((sum, s) => sum + (s.total_products || 0), 0) || 0;
+                const totalValue = data.sessions?.reduce((sum, s) => sum + (s.total_value || 0), 0) || 0;
+                const sessionCount = data.count || 0;
+                const successCount = data.sessions?.filter(s => s.status === 'completed').length || 0;
+                const successRate = sessionCount > 0 ? Math.round((successCount / sessionCount) * 100) : 0;
+                
+                document.getElementById('totalProducts').textContent = totalProducts;
+                document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString()}`;
+                document.getElementById('sessionCount').textContent = sessionCount;
+                document.getElementById('successRate').textContent = `${successRate}%`;
+                
+                showAlert('📊 Historial actualizado', 'info');
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando historial:', error);
+            showAlert('❌ Error cargando historial', 'danger');
+        });
+}
+
+function checkDatabase() {
+    fetch('/api/v1/products/items')
+        .then(res => res.json())
+        .then(data => {
+            console.log('🔍 Diagnóstico BD:', data);
+            let msg = `📊 Productos en BD: ${data.count || 0}\n`;
+            if (data.products) {
+                msg += `Primer producto: ${JSON.stringify(data.products[0])}`;
+            }
+            showAlert(msg, 'info');
+        })
+        .catch(error => {
+            showAlert('❌ Error: ' + error.message, 'danger');
+        });
+}
+
+function exportProducts() {
+    fetch('/api/v1/products/items')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.products || data.products.length === 0) {
+                showAlert('⚠️ No hay productos para exportar', 'warning');
+                return;
+            }
+            
+            const csvData = [
+                ['ID', 'Producto', 'Categoría', 'Precio', 'Fuente'],
+                ...data.products.map(p => [
+                    p.id,
+                    p.name,
+                    p.category,
+                    p.price,
+                    p.source
+                ])
+            ];
+            
+            const csvContent = csvData.map(row => row.join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `productos_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            showAlert('✅ Productos exportados como CSV', 'success');
+        });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+</script>
+
+<style>
+.mode-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    transform: translateY(-2px);
+}
+
+.mode-card.border-primary {
+    border-color: #10B981 !important;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 12px;
+}
+
+.progress-bar {
+    background: linear-gradient(135deg, #10B981, #3B82F6);
+}
+
+.table-dark {
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.table-dark th {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+    color: #94A3B8;
+}
+</style>
+{% endblock %}

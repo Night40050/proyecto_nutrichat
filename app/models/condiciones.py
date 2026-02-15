@@ -6,10 +6,34 @@ Incluye: CondicionNutricional, UsuarioCondicion
 import uuid
 from typing import Optional, Dict, Any
 
-from sqlalchemy import Column, Text, Integer, ForeignKey, PrimaryKeyConstraint
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, Text, Integer, ForeignKey, PrimaryKeyConstraint, JSON
+from sqlalchemy.orm import relationship
 
 from .database import db
+# Importar GUID
+try:
+    from app.db_types import GUID
+except ImportError:
+    from sqlalchemy.types import TypeDecorator, String
+    
+    class GUID(TypeDecorator):
+        """
+        UUID compatible con PostgreSQL y SQLite
+        """
+        impl = String(36)
+        cache_ok = True
+
+        def process_bind_param(self, value, dialect):
+            if value is None:
+                return None
+            if isinstance(value, uuid.UUID):
+                return str(value)
+            return str(uuid.UUID(value))
+
+        def process_result_value(self, value, dialect):
+            if value is None:
+                return None
+            return uuid.UUID(value)
 
 
 # ==================== CONDICION NUTRICIONAL ====================
@@ -26,7 +50,7 @@ class CondicionNutricional(db.Model):
     condicion_id = Column(Integer, primary_key=True, autoincrement=True)
     nombre = Column(Text, nullable=False, unique=True)
     descripcion = Column(Text, nullable=True)
-    parametros = Column(JSONB, nullable=True)
+    parametros = Column(JSON, nullable=True)
 
     # ==================== MÉTODOS DE CREACIÓN ====================
 
@@ -139,7 +163,7 @@ class UsuarioCondicion(db.Model):
     )
 
     # Relaciones (Primary Key compuesta)
-    usuario_id = Column(UUID(as_uuid=True), ForeignKey('usuarios.usuario_id', ondelete='CASCADE'), nullable=False)
+    usuario_id = Column(GUID(), ForeignKey('usuarios.usuario_id', ondelete='CASCADE'), nullable=False)
     condicion_id = Column(Integer, ForeignKey('condiciones_nutricionales.condicion_id'), nullable=False)
 
     # ==================== MÉTODOS DE CREACIÓN ====================
@@ -221,4 +245,3 @@ class UsuarioCondicion(db.Model):
 
     def __str__(self) -> str:
         return f"Usuario {self.usuario_id} - Condición {self.condicion_id}"
-
