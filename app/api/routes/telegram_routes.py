@@ -170,21 +170,6 @@ def clear_sesion():
     return TelegramSesionController.clear_sesion()
 
 
-@telegram_bp.route('/telegram/sesion/<int:telegram_id>', methods=['GET'])
-def get_sesion_by_telegram_id(telegram_id):
-    """
-    Obtener sesión por Telegram ID (uso N8N)
-    
-    Parámetros:
-    - telegram_id: ID de Telegram del usuario
-    
-    Response:
-    {
-        "success": true,
-        "data": {...}
-    }
-    """
-    return TelegramSesionController.get_sesion_by_telegram_id(telegram_id)
 
 @telegram_bp.route('/telegram/sesion/<int:telegram_id>', methods=['GET'])
 def get_sesion_by_telegram_id(telegram_id):
