@@ -193,6 +193,28 @@ class UserController:
         try:
             user = User.get_by_telegram_id(int(telegram_id))
             
+            if user:
+                # ACTUALIZACIÓN: Si el usuario ya existe, solo llenamos lo nuevo
+                if 'nombre' in data: user.nombre = data['nombre']
+                if 'email' in data and data['email']: user.email = data['email'] # <--- CRÍTICO
+                if 'peso_kg' in data: user.peso_kg = data['peso_kg']
+                if 'altura_cm' in data: user.altura_cm = data['altura_cm']
+                if 'objetivo_nutricional' in data: user.objetivo_nutricional = data['objetivo_nutricional']
+    
+                # Manejo de preferencias nutricionales
+                prefs = user.get_nutritional_preferences() or {}
+                if 'alergias' in data: prefs['allergies'] = data['alergias']
+                if 'condiciones' in data: prefs['conditions'] = data['condiciones']
+                user.set_nutritional_preferences(prefs)
+
+                db.session.commit()
+                return jsonify({
+                    'success': True, 
+                    'message': 'Usuario actualizado exitosamente',
+                    'user': user.to_json_safe()
+                }), 200
+
+
             if not user:
                 return jsonify({
                     'success': False,
