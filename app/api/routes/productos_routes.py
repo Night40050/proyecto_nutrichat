@@ -316,3 +316,8 @@ def get_latest_snapshot_by_producto(producto_id):
     return ProductosController.get_latest_snapshot_by_producto(producto_id)
 
 
+@productos_bp.route('/productos/snapshots/latest-bulk', methods=['GET'])
+def get_latest_snapshots_bulk():
+    # SELECT DISTINCT ON (producto_id) producto_id, precio, disponibilidad
+    # FROM producto_snapshot ORDER BY producto_id, fecha_captura DESC
+    return ProductosController.get_latest_snapshots_bulk()

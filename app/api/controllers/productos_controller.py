@@ -959,3 +959,32 @@ class ProductosController:
                 'message': 'Error interno del servidor'
             }), 500
 
+
+    @staticmethod
+    def get_latest_snapshots_bulk():
+        try:
+            # Esta consulta obtiene el último precio registrado para cada producto
+            # Usando una subconsulta para obtener la fecha máxima por producto
+            subquery = db.session.query(
+                ProductoSnapshot.producto_id,
+                func.max(ProductoSnapshot.fecha_captura).label('max_fecha')
+            ).group_by(ProductoSnapshot.producto_id).subquery()
+
+            latest_snapshots = db.session.query(ProductoSnapshot).join(
+                subquery,
+                (ProductoSnapshot.producto_id == subquery.c.producto_id) &
+                (ProductoSnapshot.fecha_captura == subquery.c.max_fecha)
+            ).all()
+
+            return jsonify({
+                "status": "success",
+                "data": [
+                    {
+                        "producto_id": s.producto_id,
+                        "precio": s.precio,
+                        "disponibilidad": s.disponibilidad
+                    } for s in latest_snapshots
+                ]
+            }), 200
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
