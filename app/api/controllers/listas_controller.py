@@ -89,7 +89,72 @@ class ListasController:
                 'success': False,
                 'message': f'Error interno del servidor: {str(e)}'
             }), 500
-    
+            
+    @staticmethod
+    def create_lista_completa():
+        """
+        Crear una lista de mercado y sus productos asociados en una sola petición
+        """
+        try:
+            user_id = get_jwt_identity()
+            data = request.get_json() or {}
+            
+            usuario_id = uuid.UUID(user_id)
+            
+            # 1. Crear la cabecera de la lista
+            # Adaptado a los nombres que envía n8n
+            nombre_lista = data.get('nombre_lista', 'Lista de Mercado')
+            descripcion = data.get('descripcion', '')
+            
+            lista = ListaMercado.create_lista(
+                usuario_id=usuario_id,
+                nombre=nombre_lista,
+                descripcion=descripcion
+            )
+            
+            db.session.add(lista)
+            db.session.flush() # Mantiene el ID de la lista en memoria antes del commit
+            
+            # 2. Procesar y asociar los productos si vienen en la petición
+            productos_data = data.get('productos', [])
+            for p in productos_data:
+                producto_id = p.get('producto_id')
+                if not producto_id:
+                    continue
+                
+                # Convertir los valores al formato correcto (Decimal para precios/cantidades)
+                cantidad = Decimal(str(p.get('cantidad', 1)))
+                precio_unitario = Decimal(str(p.get('precio_unitario', 0)))
+                notas = p.get('notas', p.get('justificacion', ''))
+                
+                # Crear la relación usando el modelo existente
+                item = ProductosEnLista.create_item_lista(
+                    lista_id=lista.id, # El UUID generado en el flush
+                    producto_id=uuid.UUID(producto_id),
+                    cantidad=cantidad,
+                    precio_unitario=precio_unitario,
+                    notas=notas
+                )
+                db.session.add(item)
+            
+            # Confirmar toda la transacción en la base de datos (Cabecera + Productos)
+            db.session.commit()
+            
+            logger.info(f"Lista completa creada exitosamente - ID: {lista.id}")
+            return jsonify({
+                'success': True,
+                'message': 'Lista y productos guardados correctamente',
+                'lista_id': str(lista.id)
+            }), 201
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error al crear lista completa: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': f'Error interno: {str(e)}'
+            }), 500
+
     @staticmethod
     def get_listas_by_usuario():
         """

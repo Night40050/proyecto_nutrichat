@@ -37,6 +37,10 @@ def create_lista():
     """
     return ListasController.create_lista()
 
+@listas_bp.route('/listas/completa', methods=['POST'])
+@jwt_required()
+def create_lista_completa():
+    return ListasController.create_lista_completa()
 
 @listas_bp.route('/listas', methods=['GET'])
 @jwt_required()
