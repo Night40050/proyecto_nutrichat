@@ -261,55 +261,70 @@ class UserController:
         try:
             user_id = get_jwt_identity()
             user = User.query.get(user_id)
-            
+
             if not user:
                 return jsonify({
                     'success': False,
                     'message': 'Usuario no encontrado'
                 }), 404
-            
+
             data = request.get_json()
             if not data:
                 return jsonify({
                     'success': False,
                     'message': 'No se enviaron datos'
                 }), 400
-            
-            # Campos actualizables
+
+            # 1. Campos planos tradicionales de la tabla
             updatable_fields = [
                 'nombre', 'telefono', 'sexo', 'fecha_nacimiento', 
                 'peso_kg', 'altura_cm', 'email'
             ]
-            
+
             for field in updatable_fields:
                 if field in data:
                     setattr(user, field, data[field])
-            
-            # Actualizar preferencias nutricionales si se envían
+
+            # 2. CORRECCIÓN PARA EDAD (age): Calcular año estimado y guardar en fecha_nacimiento
+            if 'age' in data:
+                try:
+                    edad_años = int(data['age'])
+                    # Calculamos un año de nacimiento aproximado basado en el año actual
+                    año_estimado = datetime.now().year - edad_años
+                    # Guardamos como 1 de enero de ese año estimado
+                    user.fecha_nacimiento = datetime.strptime(f"{año_estimado}-01-01", "%Y-%m-%d").date()
+                except (ValueError, TypeError):
+                    return jsonify({'success': False, 'message': 'El formato de edad debe ser un número entero'}), 400
+
+            # 3. Actualizar preferencias nutricionales si se envían
             if 'nutritional_preferences' in data:
                 user.set_nutritional_preferences(data['nutritional_preferences'])
-            
-            # Actualizar presupuesto si se envía
+
+            # 4. CORRECCIÓN PARA PRESUPUESTOS: Mantener el valor actual de la BD si no viene en el JSON
             if 'budget_monthly' in data or 'budget_weekly' in data:
+                # Si el JSON no trae el campo, tomamos el que ya tiene el objeto 'user' en la BD
+                nuevo_mensual = data.get('budget_monthly') if 'budget_monthly' in data else user.budget_monthly
+                nuevo_semanal = data.get('budget_weekly') if 'budget_weekly' in data else user.budget_weekly
+
                 user.set_budget(
-                    monthly=data.get('budget_monthly'),
-                    weekly=data.get('budget_weekly')
+                    monthly=nuevo_mensual,
+                    weekly=nuevo_semanal
                 )
-            
+
             db.session.commit()
-            
+
             return jsonify({
                 'success': True,
                 'message': 'Perfil actualizado exitosamente',
                 'user': user.to_json_safe()
             }), 200
-            
+
         except ValueError as e:
             return jsonify({
                 'success': False,
                 'message': str(e)
             }), 400
-            
+
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error al actualizar perfil: {str(e)}")
