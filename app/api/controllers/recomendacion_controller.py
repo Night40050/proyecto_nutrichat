@@ -5,7 +5,7 @@ from flask import request, jsonify
 import logging
 
 from app.models.user import User
-from app.services.recomendacion_service import generar_recomendacion
+from app.api.services.recomendacion_service import generar_recomendacion
 
 logger = logging.getLogger(__name__)
 
