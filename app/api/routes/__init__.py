@@ -15,6 +15,8 @@ from .listas_routes import listas_bp
 from .condiciones_routes import condiciones_bp
 from .audit_log_routes import audit_log_bp
 
+from .recomendacion_routes import recomendacion_bp
+
 # Configurar logging
 logger = logging.getLogger(__name__)
 
@@ -92,6 +94,9 @@ def register_routes(app: Flask):
     app.register_blueprint(condiciones_bp, url_prefix='/api')
     app.register_blueprint(audit_log_bp, url_prefix='/api')
     
+    # ... oalgoritmo implementacion
+    app.register_blueprint(recomendacion_bp, url_prefix='/api')
+
     # Registrar manejadores de errores a nivel de aplicación
     register_error_handlers(app)
 
