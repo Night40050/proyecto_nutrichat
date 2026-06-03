@@ -4,7 +4,7 @@ Controlador para el endpoint de recomendación de productos en NutriChat
 from flask import request, jsonify
 import logging
 
-from app.models.usuarios import User
+from app.models.user import User
 from app.services.recomendacion_service import generar_recomendacion
 
 logger = logging.getLogger(__name__)
