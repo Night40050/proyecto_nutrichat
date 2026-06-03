@@ -9,7 +9,7 @@ from sqlalchemy import func
 
 from app.models.database import db
 from app.models.productos import Producto, ProductoNutricion, ProductoSnapshot, Categoria
-from app.models.usuarios import User  # Asegúrate de que este modelo exista
+from app.models.user import User # Asegúrate de que este modelo exista
 
 logger = logging.getLogger(__name__)
 
