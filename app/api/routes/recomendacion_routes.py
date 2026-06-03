@@ -2,7 +2,7 @@
 Rutas del módulo de recomendación de productos — NutriChat
 """
 from flask import Blueprint
-from app.controllers.recomendacion_controller import RecomendacionController
+from app.api.controllers.recomendacion_controller import RecomendacionController
 
 recomendacion_bp = Blueprint('recomendacion', __name__)
 
