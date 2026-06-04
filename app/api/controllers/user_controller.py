@@ -97,8 +97,15 @@ class UserController:
                 altura_cm=data.get('altura_cm')
             )
 
-            # Guardar preferencias nutricionales (objetivo, alergias, condiciones, etc.)
-            prefs = {}
+            # ------ CORRECCIÓN: inicializar perfil_json como diccionario ------
+            if not isinstance(user.perfil_json, dict):
+                user.perfil_json = {}
+
+            # 1. Preferencias nutricionales
+            prefs = user.perfil_json.get('nutritional_preferences', {})
+            if not isinstance(prefs, dict):
+                prefs = {}
+
             if 'objetivo_nutricional' in data:
                 prefs['objetivo_nutricional'] = data['objetivo_nutricional']
             if 'alergias' in data:
@@ -107,16 +114,17 @@ class UserController:
                 prefs['conditions'] = data['condiciones']
             if 'preferencias' in data:
                 prefs['preferencias'] = data['preferencias']
+
             if prefs:
-                user.set_nutritional_preferences(prefs)
+                user.perfil_json['nutritional_preferences'] = prefs
 
-            # Guardar presupuestos
-            if 'budget_monthly' in data or 'budget_weekly' in data:
-                user.set_budget(
-                    monthly=data.get('budget_monthly'),
-                    weekly=data.get('budget_weekly')
-                )
+            # 2. Presupuestos
+            if 'budget_monthly' in data:
+                user.perfil_json['budget_monthly'] = data['budget_monthly']
+            if 'budget_weekly' in data:
+                user.perfil_json['budget_weekly'] = data['budget_weekly']
 
+            # 3. Guardar
             db.session.add(user)
             db.session.commit()
 
@@ -149,7 +157,7 @@ class UserController:
                 'success': False,
                 'message': f'Error interno del servidor: {str(e)}'
             }), 500
-    
+        
     @staticmethod
     def login():
         """
