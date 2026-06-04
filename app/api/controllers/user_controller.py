@@ -333,3 +333,25 @@ class UserController:
                 'success': False,
                 'message': 'Error interno del servidor'
             }), 500
+
+    @users_bp.route('/users/profile', methods=['DELETE'])
+    @jwt_required()
+    def delete_user_profile():
+        """Elimina definitivamente la cuenta del usuario autenticado y todos sus datos asociados."""
+        # Obtiene el ID del usuario desde el JWT
+        user_id = get_jwt_identity()
+
+        # Busca al usuario
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify(success=False, message="Usuario no encontrado"), 404
+
+        try:
+            # Elimina al usuario (el ON DELETE CASCADE se encarga de sus tablas relacionadas)
+            db.session.delete(user)
+            db.session.commit()
+
+            return jsonify(success=True, message="Cuenta eliminada exitosamente"), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify(success=False, message="Error al eliminar la cuenta"), 500
