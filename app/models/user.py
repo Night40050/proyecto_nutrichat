@@ -312,10 +312,31 @@ class User(db.Model):
 
         return data
 
-    def to_json_safe(self) -> Dict[str, Any]:
-        """Convertir a JSON seguro (sin datos sensibles)"""
-        return self.to_dict(include_sensitive=False)
-
+    def to_json_safe(self):
+        # Asegurarnos de que perfil_json no sea None para que no rompa
+        perfil = self.perfil_json or {}
+        
+        return {
+            'id': str(self.id) if hasattr(self, 'id') else str(self.usuario_id),
+            'nombre': self.nombre,
+            'email': self.email,
+            'telefono': self.telefono,
+            'rol_id': self.rol_id,
+            'fecha_registro': self.fecha_registro.isoformat() if self.fecha_registro else None,
+            'activo': self.activo,
+            'sexo': self.sexo,
+            'fecha_nacimiento': self.fecha_nacimiento.isoformat() if self.fecha_nacimiento else None,
+            'peso_kg': float(self.peso_kg) if self.peso_kg else None,
+            'altura_cm': float(self.altura_cm) if self.altura_cm else None,
+            'telegram_id': self.telegram_id,
+            'ultima_conexion': self.ultima_conexion.isoformat() if self.ultima_conexion else None,
+            'bmi': getattr(self, 'bmi', None), # Si tienes la propiedad calculada
+            
+            # 👈 AQUÍ ESTÁ EL TRUCO: Extraerlos directamente del JSON de la base de datos
+            'budget_monthly': perfil.get('budget_monthly'),
+            'budget_weekly': perfil.get('budget_weekly'),
+            'nutritional_preferences': perfil.get('nutritional_preferences', {})
+        }
     # ==================== MÉTODOS DE CONSULTA ====================
     
     @classmethod

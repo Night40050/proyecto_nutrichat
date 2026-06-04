@@ -298,19 +298,21 @@ class UserController:
             if 'nutritional_preferences' in data:
                 user.set_nutritional_preferences(data['nutritional_preferences'])
 
-            # 4. PROCESAMIENTO CORRECTO PARA PRESUPUESTOS (Usa el método interno obligatoriamente)
+            # 4. PROCESAMIENTO PARA PRESUPUESTOS (Leyendo del JSON interno del usuario)
             if 'budget_monthly' in data or 'budget_weekly' in data:
-                # Si el campo no viene en el JSON de n8n, usamos la propiedad actual del usuario
-                nuevo_mensual = data.get('budget_monthly') if 'budget_monthly' in data else user.budget_monthly
-                nuevo_semanal = data.get('budget_weekly') if 'budget_weekly' in data else user.budget_weekly
+                perfil_actual = user.perfil_json or {}
+                
+                # Si n8n no envía el campo, lo rescatamos de lo que ya hay en el perfil_json actual
+                nuevo_mensual = data.get('budget_monthly') if 'budget_monthly' in data else perfil_actual.get('budget_monthly')
+                nuevo_semanal = data.get('budget_weekly') if 'budget_weekly' in data else perfil_actual.get('budget_weekly')
 
-                # Llamamos al método especializado para que maneje la lógica interna/setter del modelo
                 user.set_budget(
                     monthly=nuevo_mensual,
                     weekly=nuevo_semanal
                 )
 
             db.session.commit()
+            db.session.refresh(user) # Forzamos a SQLAlchemy a releer el objeto actualizado
 
             return jsonify({
                 'success': True,
