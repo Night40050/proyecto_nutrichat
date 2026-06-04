@@ -16,22 +16,22 @@ class UserController:
     def register():
         try:
             data = request.get_json()
-            
+
             if not data:
                 return jsonify({
                     'success': False,
                     'message': 'No se enviaron datos'
                 }), 400
-            
-            #  SOLO telegram_id es requerido
+
+            # SOLO telegram_id es requerido
             telegram_id = data.get('telegram_id')
-            
+
             if not telegram_id:
                 return jsonify({
                     'success': False,
                     'message': 'telegram_id es requerido'
                 }), 400
-            
+
             # Validar que telegram_id sea un número entero
             try:
                 telegram_id = int(telegram_id)
@@ -42,28 +42,41 @@ class UserController:
                 }), 400
 
             user = User.get_by_telegram_id(telegram_id)
-            # Verificar si el usuario ya existe
+
+            # ── Si el usuario ya existe, ACTUALIZAMOS sus datos ────────────
             if user:
-                # 2. Si existe, ACTUALIZAMOS los campos que vengan en el JSON
                 if 'nombre' in data: user.nombre = data['nombre']
                 if 'peso_kg' in data: user.peso_kg = data['peso_kg']
                 if 'altura_cm' in data: user.altura_cm = data['altura_cm']
-                if 'objetivo_nutricional' in data: user.objetivo_nutricional = data['objetivo_nutricional']
-        
-                # Para campos complejos como alergias/condiciones
-                if 'alergias' in data or 'condiciones' in data:
-                    prefs = user.get_nutritional_preferences() or {}
-                    if 'alergias' in data: prefs['allergies'] = data['alergias']
-                    if 'condiciones' in data: prefs['conditions'] = data['condiciones']
+
+                # Preferencias nutricionales (objetivo, alergias, condiciones, etc.)
+                prefs = user.get_nutritional_preferences() or {}
+                if 'objetivo_nutricional' in data:
+                    prefs['objetivo_nutricional'] = data['objetivo_nutricional']
+                if 'alergias' in data:
+                    prefs['allergies'] = data['alergias']
+                if 'condiciones' in data:
+                    prefs['conditions'] = data['condiciones']
+                if 'preferencias' in data:
+                    prefs['preferencias'] = data['preferencias']
+                if prefs:
                     user.set_nutritional_preferences(prefs)
+
+                # Presupuestos
+                if 'budget_monthly' in data or 'budget_weekly' in data:
+                    perfil_actual = user.perfil_json or {}
+                    nuevo_mensual = data.get('budget_monthly') if 'budget_monthly' in data else perfil_actual.get('budget_monthly')
+                    nuevo_semanal = data.get('budget_weekly') if 'budget_weekly' in data else perfil_actual.get('budget_weekly')
+                    user.set_budget(monthly=nuevo_mensual, weekly=nuevo_semanal)
 
                 db.session.commit()
                 return jsonify({
-                    'success': True, 
+                    'success': True,
                     'message': 'Usuario actualizado exitosamente',
                     'user': user.to_json_safe()
                 }), 200
-            
+
+            # ── Si no existe, CREAMOS un usuario nuevo ─────────────────────
             # Verificar email si se proporciona
             email = data.get('email')
             if email and User.get_by_email(email):
@@ -71,8 +84,8 @@ class UserController:
                     'success': False,
                     'message': 'El email ya está registrado'
                 }), 409
-            
-            #  Crear usuario con telegram_id 
+
+            # Crear usuario con los campos planos
             user = User.create_user(
                 telegram_id=telegram_id,
                 nombre=data.get('nombre'),
@@ -83,36 +96,44 @@ class UserController:
                 peso_kg=data.get('peso_kg'),
                 altura_cm=data.get('altura_cm')
             )
-            # 2. ASIGNAR LOS DATOS DEL CHAT 
-            if 'objetivo_nutricional' in data:
-                user.objetivo_nutricional = data['objetivo_nutricional']
 
-            # Guardar alergias y condiciones en el objeto de preferencias
+            # Guardar preferencias nutricionales (objetivo, alergias, condiciones, etc.)
             prefs = {}
-            if 'alergias' in data: prefs['allergies'] = data['alergias']
-            if 'condiciones' in data: prefs['conditions'] = data['condiciones']
-
+            if 'objetivo_nutricional' in data:
+                prefs['objetivo_nutricional'] = data['objetivo_nutricional']
+            if 'alergias' in data:
+                prefs['allergies'] = data['alergias']
+            if 'condiciones' in data:
+                prefs['conditions'] = data['condiciones']
+            if 'preferencias' in data:
+                prefs['preferencias'] = data['preferencias']
             if prefs:
                 user.set_nutritional_preferences(prefs)
 
-            # Guardar en base de datos
+            # Guardar presupuestos
+            if 'budget_monthly' in data or 'budget_weekly' in data:
+                user.set_budget(
+                    monthly=data.get('budget_monthly'),
+                    weekly=data.get('budget_weekly')
+                )
+
             db.session.add(user)
             db.session.commit()
-            
+
             logger.info(f"Usuario creado exitosamente - Telegram ID: {telegram_id}")
-            
+
             return jsonify({
                 'success': True,
                 'message': 'Usuario creado exitosamente',
                 'user': user.to_json_safe()
             }), 201
-            
+
         except ValueError as e:
             return jsonify({
                 'success': False,
                 'message': str(e)
             }), 400
-            
+
         except IntegrityError as e:
             db.session.rollback()
             logger.error(f"Error de integridad: {str(e)}")
@@ -120,7 +141,7 @@ class UserController:
                 'success': False,
                 'message': 'Error de integridad: telegram_id o email duplicado'
             }), 409
-            
+
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error al crear usuario: {str(e)}")
