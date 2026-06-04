@@ -292,3 +292,8 @@ def register_or_update_user():
     Ideal para el flujo de n8n que completa el perfil paso a paso.
     """
     return UserController.register() # Seguiremos usando el controlador, pero lo ajustaremos
+
+@users_bp.route('/users/profile', methods=['DELETE'])
+@jwt_required()
+def delete_user_profile():
+    return UserController.delete_user_profile()

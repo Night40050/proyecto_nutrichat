@@ -8,6 +8,8 @@ from app.models.database import db
 from app.models.user import User
 import logging
 
+from app.api.controllers.user_controller import UserController
+
 logger = logging.getLogger(__name__)
 
 class UserController:
@@ -334,8 +336,7 @@ class UserController:
                 'message': 'Error interno del servidor'
             }), 500
 
-    @users_bp.route('/users/profile', methods=['DELETE'])
-    @jwt_required()
+    @staticmethod
     def delete_user_profile():
         """Elimina definitivamente la cuenta del usuario autenticado y todos sus datos asociados."""
         # Obtiene el ID del usuario desde el JWT
