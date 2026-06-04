@@ -278,7 +278,7 @@ class UserController:
             # 1. Campos planos tradicionales de la tabla
             updatable_fields = [
                 'nombre', 'telefono', 'sexo', 'fecha_nacimiento', 
-                'peso_kg', 'altura_cm', 'email'
+                'peso_kg', 'altura_cm', 'email', 'budget_monthly', 'budget_weekly'
             ]
 
             for field in updatable_fields:
@@ -301,16 +301,18 @@ class UserController:
                 user.set_nutritional_preferences(data['nutritional_preferences'])
 
             # 4. CORRECCIÓN PARA PRESUPUESTOS: Mantener el valor actual de la BD si no viene en el JSON
+            
+            """
             if 'budget_monthly' in data or 'budget_weekly' in data:
                 # Si el JSON no trae el campo, tomamos el que ya tiene el objeto 'user' en la BD
                 nuevo_mensual = data.get('budget_monthly') if 'budget_monthly' in data else user.budget_monthly
                 nuevo_semanal = data.get('budget_weekly') if 'budget_weekly' in data else user.budget_weekly
-
+            
                 user.set_budget(
                     monthly=nuevo_mensual,
                     weekly=nuevo_semanal
                 )
-
+            """
             db.session.commit()
 
             return jsonify({
