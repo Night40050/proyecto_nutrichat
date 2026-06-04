@@ -89,7 +89,7 @@ class ListasController:
                 'success': False,
                 'message': f'Error interno del servidor: {str(e)}'
             }), 500
-            
+
     @staticmethod
     def create_lista_completa():
         """
@@ -101,15 +101,23 @@ class ListasController:
             
             usuario_id = uuid.UUID(user_id)
             
-            # 1. Crear la cabecera de la lista
-            # Adaptado a los nombres que envía n8n
+            # 1. Capturar campos principales que vienen de n8n
             nombre_lista = data.get('nombre_lista', 'Lista de Mercado')
             descripcion = data.get('descripcion', '')
             
-            lista = ListaMercado.create_lista(
+            # Capturar el total que calculó Gemini por si acaso
+            total_raw = data.get('total_estimado', 0)
+            try:
+                total_inicial = Decimal(str(total_raw))
+            except (ValueError, TypeError, InvalidOperation):
+                total_inicial = Decimal('0.00')
+            
+            # Crear la cabecera pasando el total inicial
+            lista = ListaMercado(
                 usuario_id=usuario_id,
                 nombre=nombre_lista,
-                descripcion=descripcion
+                descripcion=descripcion,
+                total_estimado=total_inicial # ─── GUARDADO CORRECTO DEL TOTAL ───
             )
             
             db.session.add(lista)
@@ -117,19 +125,24 @@ class ListasController:
             
             # 2. Procesar y asociar los productos si vienen en la petición
             productos_data = data.get('productos', [])
+            total_calculado = Decimal('0.00') # Para verificar sumatorias reales
+            
             for p in productos_data:
                 producto_id = p.get('producto_id')
                 if not producto_id:
                     continue
                 
-                # Convertir los valores al formato correcto (Decimal para precios/cantidades)
+                # Convertir los valores al formato correcto
                 cantidad = Decimal(str(p.get('cantidad', 1)))
                 precio_unitario = Decimal(str(p.get('precio_unitario', 0)))
                 notas = p.get('notas', p.get('justificacion', ''))
                 
+                # Sumar al acumulador real
+                total_calculado += cantidad * precio_unitario
+                
                 # Crear la relación usando el modelo existente
                 item = ProductosEnLista.create_item_lista(
-                    lista_id=lista.id, # El UUID generado en el flush
+                    lista_id=lista.id,
                     producto_id=uuid.UUID(producto_id),
                     cantidad=cantidad,
                     precio_unitario=precio_unitario,
@@ -137,14 +150,20 @@ class ListasController:
                 )
                 db.session.add(item)
             
+            # Opcional: Si el total calculado difiere del enviado por fallos de redondeo de la IA, 
+            # aseguramos la consistencia guardando la suma exacta de los productos reales.
+            if total_calculado > 0:
+                lista.total_estimado = total_calculado
+            
             # Confirmar toda la transacción en la base de datos (Cabecera + Productos)
             db.session.commit()
             
-            logger.info(f"Lista completa creada exitosamente - ID: {lista.id}")
+            logger.info(f"Lista completa creada exitosamente - ID: {lista.id} con Total: {lista.total_estimado}")
             return jsonify({
                 'success': True,
                 'message': 'Lista y productos guardados correctamente',
-                'lista_id': str(lista.id)
+                'lista_id': str(lista.id),
+                'total_guardado': float(lista.total_estimado)
             }), 201
             
         except Exception as e:

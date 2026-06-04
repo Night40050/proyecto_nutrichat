@@ -34,6 +34,9 @@ class ListaMercado(db.Model):
     nombre = Column(Text, nullable=True)
     descripcion = Column(Text, nullable=True)
 
+    # ─── AGREGA ESTA LÍNEA PARA EL TOTAL DE LA LISTA ───
+    total_estimado = Column(Numeric(12, 2), nullable=False, default=Decimal('0.00'))
+
     # Fechas
     creado_en = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), nullable=True)
@@ -100,6 +103,7 @@ class ListaMercado(db.Model):
             'usuario_id': str(self.usuario_id),
             'nombre': self.nombre,
             'descripcion': self.descripcion,
+            'total_estimado': float(self.total_estimado) if self.total_estimado else 0.0,
             'creado_en': self.creado_en.isoformat() if self.creado_en else None,
             'actualizado_en': self.actualizado_en.isoformat() if self.actualizado_en else None,
         }
