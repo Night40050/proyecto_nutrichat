@@ -9,7 +9,7 @@ from sqlalchemy import func
 
 from app.models.database import db
 from app.models.productos import Producto, ProductoNutricion, ProductoSnapshot
-from app.models.usuarios import User
+from app.models.user import User 
 
 logger = logging.getLogger(__name__)
 
