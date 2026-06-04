@@ -275,10 +275,10 @@ class UserController:
                     'message': 'No se enviaron datos'
                 }), 400
 
-            # 1. Campos planos tradicionales de la tabla
+            # 1. Campos planos tradicionales de la tabla (Quitamos los presupuestos de aquí)
             updatable_fields = [
                 'nombre', 'telefono', 'sexo', 'fecha_nacimiento', 
-                'peso_kg', 'altura_cm', 'email', 'budget_monthly', 'budget_weekly'
+                'peso_kg', 'altura_cm', 'email'
             ]
 
             for field in updatable_fields:
@@ -289,9 +289,7 @@ class UserController:
             if 'age' in data:
                 try:
                     edad_años = int(data['age'])
-                    # Calculamos un año de nacimiento aproximado basado en el año actual
                     año_estimado = datetime.now().year - edad_años
-                    # Guardamos como 1 de enero de ese año estimado
                     user.fecha_nacimiento = datetime.strptime(f"{año_estimado}-01-01", "%Y-%m-%d").date()
                 except (ValueError, TypeError):
                     return jsonify({'success': False, 'message': 'El formato de edad debe ser un número entero'}), 400
@@ -300,19 +298,18 @@ class UserController:
             if 'nutritional_preferences' in data:
                 user.set_nutritional_preferences(data['nutritional_preferences'])
 
-            # 4. CORRECCIÓN PARA PRESUPUESTOS: Mantener el valor actual de la BD si no viene en el JSON
-            
-            """
+            # 4. PROCESAMIENTO CORRECTO PARA PRESUPUESTOS (Usa el método interno obligatoriamente)
             if 'budget_monthly' in data or 'budget_weekly' in data:
-                # Si el JSON no trae el campo, tomamos el que ya tiene el objeto 'user' en la BD
+                # Si el campo no viene en el JSON de n8n, usamos la propiedad actual del usuario
                 nuevo_mensual = data.get('budget_monthly') if 'budget_monthly' in data else user.budget_monthly
                 nuevo_semanal = data.get('budget_weekly') if 'budget_weekly' in data else user.budget_weekly
-            
+
+                # Llamamos al método especializado para que maneje la lógica interna/setter del modelo
                 user.set_budget(
                     monthly=nuevo_mensual,
                     weekly=nuevo_semanal
                 )
-            """
+
             db.session.commit()
 
             return jsonify({
