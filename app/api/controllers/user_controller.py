@@ -49,7 +49,7 @@ class UserController:
                 if 'peso_kg' in data: user.peso_kg = data['peso_kg']
                 if 'altura_cm' in data: user.altura_cm = data['altura_cm']
 
-                # Preferencias nutricionales (objetivo, alergias, condiciones, etc.)
+                # Preferencias nutricionales
                 prefs = user.get_nutritional_preferences() or {}
                 if 'objetivo_nutricional' in data:
                     prefs['objetivo_nutricional'] = data['objetivo_nutricional']
@@ -64,7 +64,7 @@ class UserController:
 
                 # Presupuestos
                 if 'budget_monthly' in data or 'budget_weekly' in data:
-                    perfil_actual = user.perfil_json or {}
+                    perfil_actual = user._get_perfil_data()  # mejor usar el método interno para obtener dict
                     nuevo_mensual = data.get('budget_monthly') if 'budget_monthly' in data else perfil_actual.get('budget_monthly')
                     nuevo_semanal = data.get('budget_weekly') if 'budget_weekly' in data else perfil_actual.get('budget_weekly')
                     user.set_budget(monthly=nuevo_mensual, weekly=nuevo_semanal)
@@ -77,7 +77,6 @@ class UserController:
                 }), 200
 
             # ── Si no existe, CREAMOS un usuario nuevo ─────────────────────
-            # Verificar email si se proporciona
             email = data.get('email')
             if email and User.get_by_email(email):
                 return jsonify({
@@ -97,15 +96,11 @@ class UserController:
                 altura_cm=data.get('altura_cm')
             )
 
-            # ------ CORRECCIÓN: inicializar perfil_json como diccionario ------
-            if not isinstance(user.perfil_json, dict):
-                user.perfil_json = {}
+            # El objeto ya está creado, perfil_json se inicializa automáticamente a "{}" en __init__
+            # No hacemos user.perfil_json = {} ni user._set_perfil_data({}) porque ya es válido
 
-            # 1. Preferencias nutricionales
-            prefs = user.perfil_json.get('nutritional_preferences', {})
-            if not isinstance(prefs, dict):
-                prefs = {}
-
+            # Preferencias nutricionales (objetivo, alergias, condiciones, etc.)
+            prefs = {}
             if 'objetivo_nutricional' in data:
                 prefs['objetivo_nutricional'] = data['objetivo_nutricional']
             if 'alergias' in data:
@@ -114,17 +109,16 @@ class UserController:
                 prefs['conditions'] = data['condiciones']
             if 'preferencias' in data:
                 prefs['preferencias'] = data['preferencias']
-
             if prefs:
-                user.perfil_json['nutritional_preferences'] = prefs
+                user.set_nutritional_preferences(prefs)
 
-            # 2. Presupuestos
-            if 'budget_monthly' in data:
-                user.perfil_json['budget_monthly'] = data['budget_monthly']
-            if 'budget_weekly' in data:
-                user.perfil_json['budget_weekly'] = data['budget_weekly']
+            # Presupuestos
+            if 'budget_monthly' in data or 'budget_weekly' in data:
+                user.set_budget(
+                    monthly=data.get('budget_monthly'),
+                    weekly=data.get('budget_weekly')
+                )
 
-            # 3. Guardar
             db.session.add(user)
             db.session.commit()
 
